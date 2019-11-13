@@ -14,12 +14,11 @@ class ffmpeg_video_decoder : public media_transform
         PLUGIN_DECLARE
     protected:
         //media_filter
-        ret_type set_media_type(input_pin* pin,media_type* mt);
-        ret_type set_media_type(output_pin* pin,media_type* mt);
-        ret_type process(input_pin* pin,media_frame* frame);
+        ret_type set_media_type(input_pin* pin,media_ptr mt);
+        ret_type set_media_type(output_pin* pin,media_ptr mt);
+        ret_type process(input_pin* pin,frame_ptr frame);
     private:
         ret_type open(media_type* mt);
-        ret_type video_decode(media_frame* frame);
         void close();
 };
 

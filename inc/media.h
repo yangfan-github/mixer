@@ -3,6 +3,7 @@
 
 #include "media_filter.h"
 
+
 bool str_cmp(const char* str_1,const char* str_2);
 
 typedef uint32_t OBJ_VERSION;
@@ -29,10 +30,15 @@ struct class_info
 
 typedef void (*PLUGIN_INIT_FUNC)(dump* dmp,const char* name);
 typedef bool (*PLUGIN_ENUM_FILTER_FUNC)(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC& func,uint32_t& priority);
+typedef void (*PLUGIN_RELEASE_FILTER_FUNC)(media_filter* filter);
+
 const char PLUGIN_INIT_FUNC_NAME[] = "init";
 const char PLUGIN_ENUM_FILTER_FUNC_NAME[] = "enum_filter";
+const char PLUGIN_RELSEAE_FILTER_FUNC_NAME[] = "release_filter";
+
 PLUNIN_API void init(dump* dmp,const char* name = nullptr);
 PLUNIN_API bool enum_filter(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC& func,uint32_t& priority);
+PLUNIN_API void release_filter(media_filter* filter);
 
 #define CLS_INFO_DEFINE(base,class,version) \
     class_info class::cls = {typeid(base).name(),typeid(class).name(),version,class::cls_create,class::cls_priority}; \
@@ -86,36 +92,22 @@ extern "C" \
         return false; \
     } \
 } \
+void release_filter(media_filter* filter) \
+{ \
+    if(nullptr != filter) \
+        delete filter; \
+} \
 
-class plugin_filter
-{
-    protected:
-        const char* _type;
-        media_filter* _filter;
-        void* _handle;
-    public:
-        plugin_filter(const char* type);
-        virtual ~plugin_filter();
-        const char* get_type();
-        void set_filter(media_filter* filter);
-        void set_handle(void* handle);
-        template<typename T> T* get_filter()
-        {
-            return dynamic_cast<T*>(_filter);
-        }
-        void operator()(media_filter* filter);
-};
-
-ret_type create_filter(plugin_filter& filter,const string& dir ,const char* info,media_type* mt_input,media_type* mt_output);
+filter_ptr create_filter(const char* type,const char* info,media_type* mt_input,media_type* mt_output,const string& dir);
 
 template<typename T>
-std::shared_ptr<T> create_filter(const char* info = nullptr,media_type* mt_input = nullptr,media_type* mt_output = nullptr,const string& dir="./")
+std::shared_ptr<T> create_filter(const char* info = nullptr,media_ptr mt_input = media_ptr(),media_ptr mt_output = media_ptr(),const string& dir="./")
 {
-    plugin_filter pf(typeid(T).name());
-    create_filter(pf,dir,info,mt_input,mt_output);
-    return std::shared_ptr<T>(pf.get_filter<T>(),pf);
+    return std::dynamic_pointer_cast<T>(create_filter(typeid(T).name(),info,mt_input.get(),mt_output.get(),dir));
 }
 
-ret_type connect(output_pin* pin_out,input_pin* pin_in,media_type* mt_out = nullptr,media_type* mt_in = nullptr,const string& dir = "./");
+ret_type connect(output_pin_ptr pin_out,input_pin_ptr pin_in,media_ptr mt_out = media_ptr(),media_ptr mt_in = media_ptr(),const string& dir = "./");
+
+ret_type convert_frame_to_array(media_ptr mt,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
 
 #endif // MEDIA_H_INCLUDED

@@ -16,53 +16,43 @@ CLS_INFO_DEFINE(media_transform,ffmpeg_audio_encoder,MAKE_VERSION(0,0,0,0))
 
 uint32_t ffmpeg_audio_encoder::cls_priority(const char* info,media_type* mt_input,media_type* mt_output)
 {
-    if(nullptr == mt_output)
+    if(nullptr == mt_output || nullptr != mt_input)
         return 0;
-    if(nullptr != mt_input)
-    {
-        if(mt_input->get_major() != mt_output->get_major() || MMT_AUDIO != mt_input->get_major())
-            return 0;
-        if(true == mt_input->is_compress() || false == mt_output->is_compress())
-            return 0;
-        if(mt_input->get_video_format() != mt_output->get_video_format())
-            return 0;
-        if(mt_input->get_video_width() != mt_output->get_video_width() || mt_input->get_video_height() != mt_output->get_video_height())
-            return 0;
-        if(mt_input->get_video_fps() != mt_output->get_video_fps())
-            return 0;
-    }
-    else
-    {
-        if(false == mt_output->is_compress())
-            return 0;
-    }
+
+    if(MMT_AUDIO != mt_output->get_major() || false == mt_output->is_compress())
+        return 0;
+
+    AVCodec* codec = avcodec_find_encoder((AVCodecID)mt_output->get_sub());
+    if(nullptr == codec)
+        return 0;
+
     return 1;
 }
 
-ret_type ffmpeg_audio_encoder::set_media_type(input_pin* pin,media_type* mt)
+ret_type ffmpeg_audio_encoder::set_media_type(input_pin* pin,media_ptr mt)
 {
-    media_type* mt_in;
-    if(nullptr != (mt_in = pin->get_media_type()))
+    media_ptr mt_in = pin->get_media_type();
+    if(mt_in)
     {
         JCHK(media_type::compare(mt,mt_in),rc_param_invalid)
     }
     return rc_ok;
 }
 
-ret_type ffmpeg_audio_encoder::set_media_type(output_pin* pin,media_type* mt)
+ret_type ffmpeg_audio_encoder::set_media_type(output_pin* pin,media_ptr mt)
 {
-    if(nullptr != mt && true == mt->is_compress())
+    if(mt && true == mt->is_compress())
     {
         ret_type rt;
-        JIF(open(mt))
-        std::shared_ptr<media_type> mt_in(new media_type());
+        JIF(open(mt.get()))
+        media_ptr mt_in = media_type::create();
         JCHK(mt_in,rc_new_fail)
-        JIF(media_type::copy(mt_in.get(),mt))
+        JIF(media_type::copy(mt_in,mt))
         mt_in->set_sub(MST_PCM);
         mt_in->set_global_header(false);
         mt_in->set_extra_data(nullptr,0);
         mt_in->set_bitrate(0);
-        return _pin_input->set_media_type(mt_in.get());
+        return _pin_input->set_media_type(mt_in);
     }
     else
     {
@@ -75,7 +65,6 @@ ret_type ffmpeg_audio_encoder::set_media_type(output_pin* pin,media_type* mt)
 ret_type ffmpeg_audio_encoder::open(media_type* mt)
 {
     close();
-    return rc_ok;
     AVCodec* codec;
     JCHKM(codec = avcodec_find_encoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("media[%1%] can not find encoder",%mt->get_sub_name()));
     JCHK(_ctxCodec = avcodec_alloc_context3(codec),rc_fail)
@@ -160,10 +149,10 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
             FORMAT_STR("Open media[%1%] encoder fail msg:%2%",
             %mt->get_sub_name()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
-    return rc_ok;
+    return mt->set_extra_data(_ctxCodec->extradata,_ctxCodec->extradata_size);
 }
 
-ret_type ffmpeg_audio_encoder::process(input_pin* pin,media_frame* frame)
+ret_type ffmpeg_audio_encoder::process(input_pin* pin,frame_ptr frame)
 {
     JCHK(nullptr != _ctxCodec,rc_state_invalid)
 
@@ -171,7 +160,8 @@ ret_type ffmpeg_audio_encoder::process(input_pin* pin,media_frame* frame)
 
 	AVFrame avframe;
 	AVFrame* avframe_in = nullptr;
-	if(nullptr != frame)
+
+	if(frame)
 	{
 		if(0 != (frame->_info.flag & MEDIA_FRAME_FLAG_NEWSEGMENT))
 		{
@@ -194,17 +184,17 @@ ret_type ffmpeg_audio_encoder::process(input_pin* pin,media_frame* frame)
 	int ret = avcodec_encode_audio2(_ctxCodec,&pkt,avframe_in,&is_output);
 	if(0 != is_output)
 	{
-        std::shared_ptr<media_frame> frame_out(new media_frame());
+        frame_ptr frame_out= media_frame::create();
         JCHK(frame_out,rc_new_fail)
-        JIF(convert_packet_to_frame(frame_out.get(),pkt,_ctxCodec->time_base))
-        _pin_output->deliver(frame_out.get());
+        JIF(convert_packet_to_frame(frame_out,pkt,_ctxCodec->time_base))
+        _pin_output->deliver(frame_out);
         av_packet_unref(&pkt);
 	}
 	else
 	{
-        if(nullptr == frame)
+        if(!frame)
         {
-            _pin_output->deliver(nullptr);
+            _pin_output->deliver(frame);
         }
         else if(0 > ret)
         {

@@ -45,23 +45,23 @@ int gcd(int a,int b)
     }
     return a;
 }
-ret_type convert_packet_to_frame(media_frame* frame,AVPacket& packet,const AVRational& base,int header_size)
+ret_type convert_packet_to_frame(frame_ptr frame,AVPacket& packet,const AVRational& base,int header_size)
 {
-    JCHK(nullptr != frame,rc_param_invalid)
+    JCHK(frame,rc_param_invalid)
 
     ret_type rt;
 	frame->_info.flag = (AV_PKT_FLAG_KEY|AV_PKT_FLAG_CORRUPT) & packet.flags;
-    frame->_info.dts = AV_NOPTS_VALUE == packet.dts ? MEDIA_FRAME_NONE_TIMESTAMP : int64_t(FRAME_TIMEBASE.den * av_q2d(base) * packet.dts + 0.5);
-    frame->_info.pts = AV_NOPTS_VALUE == packet.pts ? MEDIA_FRAME_NONE_TIMESTAMP : int64_t(FRAME_TIMEBASE.den * av_q2d(base) * packet.pts + 0.5);
-    frame->_info.duration = 0 == packet.duration ? 0 : int64_t(packet.duration * FRAME_TIMEBASE.den * av_q2d(base) + 0.5);
+    frame->_info.dts = AV_NOPTS_VALUE == packet.dts ? MEDIA_FRAME_NONE_TIMESTAMP : av_rescale_q(packet.dts,base,FRAME_TIMEBASE);
+    frame->_info.pts = AV_NOPTS_VALUE == packet.pts ? MEDIA_FRAME_NONE_TIMESTAMP : av_rescale_q(packet.pts,base,FRAME_TIMEBASE);
+    frame->_info.duration = 0 == packet.duration ? 0 : av_rescale_q(packet.duration,base,FRAME_TIMEBASE);
     JIF(frame->alloc(packet.size+header_size))
     memcpy(((uint8_t*)frame->get_buf())+header_size,packet.data,packet.size);
     return rt;
 }
 
-ret_type convert_frame_to_packet(AVPacket& packet,const AVRational* base,media_frame* frame)
+ret_type convert_frame_to_packet(AVPacket& packet,const AVRational* base,frame_ptr frame)
 {
-    JCHK(nullptr != frame,rc_param_invalid)
+    JCHK(frame,rc_param_invalid)
 
 	packet.flags = (AV_PKT_FLAG_KEY|AV_PKT_FLAG_CORRUPT) & frame->_info.flag;
 	packet.dts = nullptr == base ? frame->_info.dts : (MEDIA_FRAME_NONE_TIMESTAMP == frame->_info.dts ? AV_NOPTS_VALUE : av_rescale_q(frame->_info.dts , FRAME_TIMEBASE, *base));
@@ -72,7 +72,7 @@ ret_type convert_frame_to_packet(AVPacket& packet,const AVRational* base,media_f
 	return rc_ok;
 }
 
-ret_type convert_frame_to_array(media_type* mt,media_frame* frame,uint8_t** dst_data,int* dst_linesize)
+ret_type convert_frame_to_array(media_ptr mt,frame_ptr frame,uint8_t** dst_data,int* dst_linesize)
 {
     JCHK(mt,rc_param_invalid)
     JCHK(frame,rc_param_invalid)
@@ -125,7 +125,7 @@ ret_type convert_frame_to_array(media_type* mt,media_frame* frame,uint8_t** dst_
         {
             JIF(frame->alloc(szBuf))
             frame->_info.samples = frame_size;
-            frame->_info.duration = mt->get_audio_frame_duration();
+            frame->_info.duration = mt->get_audio_duration();
         }
         else
         {
@@ -139,7 +139,7 @@ ret_type convert_frame_to_array(media_type* mt,media_frame* frame,uint8_t** dst_
     return rt;
 }
 
-ret_type convert_array_to_frame(media_type* mt,const uint8_t** src_data,const int* src_linesize,media_frame* frame)
+ret_type convert_array_to_frame(media_ptr mt,const uint8_t** src_data,const int* src_linesize,frame_ptr frame)
 {
     ret_type rt;
     uint8_t *dst_data[4]; int dst_linesize[4];
@@ -153,7 +153,15 @@ ret_type convert_array_to_frame(media_type* mt,const uint8_t** src_data,const in
     return rt;
 }
 
-ret_type convert_frame_to_avframe(media_type* mt,AVFrame* dest,media_frame* sour,AVCodecContext* ctxCodec)
+ret_type convert_avframe_to_frame(media_ptr mt,frame_ptr dest,AVFrame* sour,AVCodecContext* ctxCodec)
+{
+    dest->_info.flag |= 0 == sour->key_frame ? 0 : MEDIA_FRAME_FLAG_SYNCPOINT;
+    dest->_info.dts = AV_NOPTS_VALUE == sour->pkt_pts ? MEDIA_FRAME_NONE_TIMESTAMP : av_rescale_q(sour->pkt_pts , ctxCodec->time_base, FRAME_TIMEBASE);
+    dest->_info.pts = AV_NOPTS_VALUE == sour->pkt_dts ? MEDIA_FRAME_NONE_TIMESTAMP : av_rescale_q(sour->pkt_dts , ctxCodec->time_base, FRAME_TIMEBASE);
+    return convert_array_to_frame(mt,(const uint8_t**)sour->data,(const int*)sour->linesize,dest);
+}
+
+ret_type convert_frame_to_avframe(media_ptr mt,AVFrame* dest,frame_ptr sour,AVCodecContext* ctxCodec)
 {
 	dest->key_frame = 0 == (MEDIA_FRAME_FLAG_SYNCPOINT&sour->_info.flag) ? 0 : 1;
     dest->pkt_pts = MEDIA_FRAME_NONE_TIMESTAMP == sour->_info.pts ? AV_NOPTS_VALUE : av_rescale_q(sour->_info.pts , FRAME_TIMEBASE, ctxCodec->time_base);

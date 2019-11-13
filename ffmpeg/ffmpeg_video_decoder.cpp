@@ -35,26 +35,26 @@ uint32_t ffmpeg_video_decoder::cls_priority(const char* info,media_type* mt_inpu
     }
     else
     {
-        if(false == mt_input->is_compress())
+        if(MMT_VIDEO != mt_input->get_major() || false == mt_input->is_compress())
             return 0;
     }
     return 1;
 }
 
-ret_type ffmpeg_video_decoder::set_media_type(input_pin* pin,media_type* mt)
+ret_type ffmpeg_video_decoder::set_media_type(input_pin* pin,media_ptr mt)
 {
     if(nullptr != mt && true == mt->is_compress())
     {
         ret_type rt;
-        JIF(open(mt))
-        std::shared_ptr<media_type> mt_out(new media_type());
+        JIF(open(mt.get()))
+        media_ptr mt_out = media_type::create();
         JCHK(mt_out,rc_new_fail)
-        JIF(media_type::copy(mt_out.get(),mt))
+        JIF(media_type::copy(mt_out,mt))
         mt_out->set_sub(MST_RAWVIDEO);
         mt_out->set_global_header(false);
         mt_out->set_extra_data(nullptr,0);
         mt_out->set_bitrate(0);
-        return _pin_output->set_media_type(mt_out.get());
+        return _pin_output->set_media_type(mt_out);
     }
     else
     {
@@ -64,22 +64,72 @@ ret_type ffmpeg_video_decoder::set_media_type(input_pin* pin,media_type* mt)
     }
 }
 
-ret_type ffmpeg_video_decoder::set_media_type(output_pin* pin,media_type* mt)
+ret_type ffmpeg_video_decoder::set_media_type(output_pin* pin,media_ptr mt)
 {
-    media_type* mt_out;
-    if(nullptr != (mt_out = pin->get_media_type()))
+    media_ptr mt_out = pin->get_media_type();
+    if(mt_out)
     {
         JCHK(media_type::compare(mt,mt_out),rc_param_invalid)
     }
     return rc_ok;
 }
 
-ret_type ffmpeg_video_decoder::process(input_pin* pin,media_frame* frame)
+ret_type ffmpeg_video_decoder::process(input_pin* pin,frame_ptr frame)
 {
-    if(nullptr != _ctxCodec)
-        return video_decode(frame);
+    JCHK(nullptr != _ctxCodec,rc_state_invalid)
+    ret_type rt = rc_ok;
+    if(!frame)
+    {
+        _pkt.buf = nullptr;
+        _pkt.data = nullptr;
+        _pkt.size = 0;
+    }
     else
-        return _pin_output->deliver(frame);
+    {
+        if(nullptr == _ctxCodec)
+        {
+            media_ptr mt = _pin_input->get_media_type();
+            JCHK(mt,rc_state_invalid)
+            JIF(open(mt.get()))
+        }
+        if(0 != (frame->_info.flag & MEDIA_FRAME_FLAG_NEWSEGMENT))
+        {
+            avcodec_flush_buffers(_ctxCodec);
+        }
+        JIF(convert_frame_to_packet(_pkt,&_ctxCodec->time_base,frame))
+        if(AV_NOPTS_VALUE == _pkt.pos || _pkt.pts > _pkt.pos)
+            _pkt.pos = _pkt.pts;
+    }
+
+    int is_output = 0;
+    int ret = avcodec_decode_video2(_ctxCodec,_avframe, &is_output,&_pkt);
+    if(0 != is_output)
+    {
+        media_ptr mt = _pin_output->get_media_type();
+        if(_ctxCodec->width != mt->get_video_width())
+            mt->set_video_width(_ctxCodec->width);
+        if(_ctxCodec->height != mt->get_video_height())
+            mt->set_video_height(_ctxCodec->height);
+
+        frame_ptr frame_out = media_frame::create();
+        JIF(convert_avframe_to_frame(mt,frame_out,_avframe,_ctxCodec))
+        return _pin_output->deliver(frame_out);
+    }
+    else
+    {
+        if(!frame)
+        {
+
+            return _pin_output->deliver(frame);
+        }
+        else
+        {
+            char err[AV_ERROR_MAX_STRING_SIZE] = {0};
+            JCHKM(0 <= ret,rc_fail,FORMAT_STR("ffmpeg video decode frame[DTS:%1%ms] fail,msg:%2%",
+                %(frame->_info.dts/10000)%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+        }
+    }
+    return rt;
 }
 
 ret_type ffmpeg_video_decoder::open(media_type* mt)
@@ -156,65 +206,14 @@ ret_type ffmpeg_video_decoder::open(media_type* mt)
     return rc_ok;
 }
 
-ret_type ffmpeg_video_decoder::video_decode(media_frame* frame)
-{
-    ret_type rt = rc_ok;
-    if(frame == nullptr)
-    {
-        _pkt.buf = nullptr;
-        _pkt.data = nullptr;
-        _pkt.size = 0;
-    }
-    else
-    {
-        if(0 != (frame->_info.flag & MEDIA_FRAME_FLAG_NEWSEGMENT))
-        {
-            avcodec_flush_buffers(_ctxCodec);
-        }
-        JIF(convert_frame_to_packet(_pkt,&_ctxCodec->time_base,frame))
-        if(AV_NOPTS_VALUE == _pkt.pos || _pkt.pts > _pkt.pos)
-            _pkt.pos = _pkt.pts;
-    }
-
-    int is_output = 0;
-    int ret = avcodec_decode_video2(_ctxCodec,_avframe, &is_output,&_pkt);
-    if(0 != is_output)
-    {
-        media_type* mt = _pin_output->get_media_type();
-        if(_ctxCodec->width != mt->get_video_width())
-            mt->set_video_width(_ctxCodec->width);
-        if(_ctxCodec->height != mt->get_video_height())
-            mt->set_video_height(_ctxCodec->height);
-
-        std::shared_ptr<media_frame> frame(new media_frame());
-        JIF(convert_array_to_frame(mt,(const uint8_t**)_avframe->data,(const int*)_avframe->linesize,frame.get()))
-        frame->_info.flag |= 0 == _avframe->key_frame ? 0 : MEDIA_FRAME_FLAG_SYNCPOINT;
-        frame->_info.dts = _avframe->pkt_dts;
-        frame->_info.pts = _avframe->pkt_pts;
-        return _pin_output->deliver(frame.get());
-    }
-    else
-    {
-        if(nullptr == frame)
-            return _pin_output->deliver(nullptr);
-        else
-        {
-            char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-            JCHKM(0 <= ret,rc_fail,FORMAT_STR("ffmpeg video decode frame[DTS:%1%ms] fail,msg:%2%",
-                %(frame->_info.dts/10000)%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
-        }
-    }
-    return rt;
-}
-
 void ffmpeg_video_decoder::close()
 {
-    if(nullptr != _avframe)
-        av_frame_free(&_avframe);
-    if(nullptr != _ctxCodec)
-    {
-        avcodec_close(_ctxCodec);
-        av_free(_ctxCodec);
-        _ctxCodec = nullptr;
-    }
+//    if(nullptr != _avframe)
+//        av_frame_free(&_avframe);
+//    if(nullptr != _ctxCodec)
+//    {
+//        avcodec_close(_ctxCodec);
+//        av_free(_ctxCodec);
+//        _ctxCodec = nullptr;
+//    }
 }

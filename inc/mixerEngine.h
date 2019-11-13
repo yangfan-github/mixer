@@ -1,16 +1,11 @@
 #ifndef MIXERENGINE_H_INCLUDED
 #define MIXERENGINE_H_INCLUDED
 
-#include "dump.h"
 extern "C"
 {
-
-    struct mixer
-    {
-        virtual ret_type load(const char* template_file) = 0;
-        virtual ret_type run(const char* task_file) = 0;
-    };
-
-    std::shared_ptr<mixer> create();
+    void* mixer_create(const char* str_template);
+    bool  mixer_run(void* handle,const char* str_task);
+    bool  mixer_wait(void* handle,int ms_wait = -1);
+    void  mixer_delete(void* handle);
 };
 #endif // I_MIXERENGINE_H_INCLUDED

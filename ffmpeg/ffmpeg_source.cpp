@@ -6,13 +6,13 @@ ffmpeg_source::stream::stream(media_filter* filter)
 :output_pin(filter)
 ,_source(dynamic_cast<ffmpeg_source*>(filter))
 ,_stream(nullptr)
-,_start(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_length(0)
+,_start(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_duration(0)
 ,_is_global_header(false)
 ,_ctxBSF(nullptr)
 ,_adts(nullptr)
-,_time(MEDIA_FRAME_NONE_TIMESTAMP)
+,_time_start(MEDIA_FRAME_NONE_TIMESTAMP)
 {
 
 }
@@ -27,7 +27,7 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
     JCHK(nullptr != stream,rc_param_invalid)
 
     ret_type rt = rc_ok;
-    std::shared_ptr<media_type> mt(new media_type());
+    media_ptr mt = media_type::create();
     JCHK(mt,rc_new_fail)
     if(stream->time_base.den != 0 && stream->time_base.num != 0)
     {
@@ -123,11 +123,10 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
             stream->codec->frame_size = 8192;
         mt->set_audio_frame_size(stream->codec->frame_size);
 
-        _duration = _mt->get_audio_frame_duration();
+        _duration = mt->get_audio_duration();
     }
     _stream = stream;
-    _time = MEDIA_FRAME_NONE_TIMESTAMP;
-    return rt;
+    return set_media_type(mt);
 }
 
 ret_type ffmpeg_source::stream::process(AVPacket& pkt)
@@ -158,7 +157,7 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
                 }
             }
         }
-        std::shared_ptr<media_frame> frame(new media_frame());
+        frame_ptr frame = media_frame::create();
         JCHK(frame,rc_new_fail)
         if(nullptr != _ctxBSF)
         {
@@ -180,21 +179,34 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
                 FORMAT_STR("ffmpeg demux stream[%1%] frame[DTS:%2%] add header fail msg:%3%",
                     %_stream->index%pkt.dts%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
-            JIF(convert_packet_to_frame(frame.get(),pktOut,_stream->time_base))
+            JIF(convert_packet_to_frame(frame,pktOut,_stream->time_base))
         }
         else if(nullptr != _adts)
         {
             int header_size = ADTS_HEADER_SIZE + _adts->pce_size;
-            JIF(convert_packet_to_frame(frame.get(),pkt,_stream->time_base,header_size))
+            JIF(convert_packet_to_frame(frame,pkt,_stream->time_base,header_size))
             adts_write_frame_header((uint8_t*)frame->get_buf(),frame->get_len());
         }
         else
         {
-            JIF(convert_packet_to_frame(frame.get(),pkt,_stream->time_base))
+            JIF(convert_packet_to_frame(frame,pkt,_stream->time_base))
         }
-        if(MEDIA_FRAME_NONE_TIMESTAMP == _time)
+        if(MEDIA_FRAME_NONE_TIMESTAMP == _time_start)
+        {
             frame->_info.flag |= MEDIA_FRAME_FLAG_NEWSEGMENT;
-        JIF(deliver(frame.get()))
+            _time_start = frame->_info.pts;
+            if(MEDIA_FRAME_NONE_TIMESTAMP == _source->_time_start)
+                _source->_time_start = _time_start;
+        }
+
+        if(MEDIA_FRAME_NONE_TIMESTAMP != _source->_time_base)
+        {
+            int64_t delta = _source->_time_start - _source->_time_base;
+            frame->_info.dts -= delta;
+            frame->_info.pts -= delta;
+        }
+        TRACE(dump::info,FORMAT_STR("source demux %1% frame dts:%2%",%_mt->get_major_name()%frame->_info.dts))
+        JIF(deliver(frame))
     }
     return rt;
 }
@@ -289,6 +301,8 @@ ffmpeg_source::ffmpeg_source()
 :_ctxFormat(nullptr)
 ,_is_global_header(false)
 ,_eof(false)
+,_time_base(MEDIA_FRAME_NONE_TIMESTAMP)
+,_time_start(MEDIA_FRAME_NONE_TIMESTAMP)
 {
     //ctor
 }
@@ -306,42 +320,48 @@ uint32_t ffmpeg_source::cls_priority(const char* info,media_type* mt_input,media
     return 1;
 }
 
-ret_type ffmpeg_source::set_media_type(output_pin* pin,media_type* mt)
+ret_type ffmpeg_source::set_media_type(output_pin* pin,media_ptr mt)
 {
-    return nullptr == pin->get_media_type() ? rc_ok : rc_state_invalid;
+    return pin->get_media_type() ? rc_state_invalid : rc_ok;
 }
 
 ret_type ffmpeg_source::process()
 {
-    JCHK(_ctxFormat,rc_state_invalid)
+    unique_lock<std::mutex> lck(_mt_process);
+    if(false == _eof)
+    {
+        JCHK(_ctxFormat,rc_state_invalid)
 
-    AVPacket pkt;
-    av_init_packet(&pkt);
-    int ret = av_read_frame(_ctxFormat, &pkt);
-    if(0 <= ret)
-    {
-        if(pkt.stream_index < (int)_pins.size())
+        AVPacket pkt;
+        av_init_packet(&pkt);
+        int ret = av_read_frame(_ctxFormat, &pkt);
+        if(0 <= ret)
         {
-            dynamic_cast<stream*>(_pins[pkt.stream_index].get())->process(pkt);
+            if(pkt.stream_index < (int)_pins.size())
+            {
+                dynamic_cast<stream*>(_pins[pkt.stream_index].get())->process(pkt);
+            }
+            av_packet_unref(&pkt);
         }
-        av_packet_unref(&pkt);
+        else
+        {
+            if(AVERROR_EOF == ret || -5 == ret)
+                _eof = true;
+        }
     }
-    else
+    if(true == _eof)
     {
-        if(AVERROR_EOF == ret || -5 == ret)
-        {
-            for(size_t i = 0 ; i < _pins.size() ; ++i)
-                _pins[i]->deliver(nullptr);
-        }
-	}
+        for(size_t i = 0 ; i < _pins.size() ; ++i)
+            _pins[i]->deliver(nullptr);
+    }
 	return rc_ok;
 }
 
-std::shared_ptr<output_pin> ffmpeg_source::get_pin(uint32_t index)
+output_pin_ptr ffmpeg_source::get_pin(uint32_t index)
 {
-    std::shared_ptr<output_pin> pin;
+    output_pin_ptr pin;
     if(index < _pins.size())
-        pin.reset(_pins.at(index).get(),pin_deleter<output_pin>(this));
+        pin.reset(_pins.at(index).get(),pin_deleter<output_pin>(shared_from_this()));
     return pin;
 }
 
@@ -371,7 +391,7 @@ ret_type ffmpeg_source::open(const string& url)
 	av_dump_format(_ctxFormat, 0, "", 0);
     if(0 == strcmp(_ctxFormat->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2") ||
         0 == strcmp(_ctxFormat->iformat->name,"flv") ||
-        0 == strcmp(_ctxFormat->iformat->name,"mkv") ||
+        0 == strcmp(_ctxFormat->iformat->name,"matroska,webm") ||
         0 == strcmp(_ctxFormat->iformat->name,"3gp"))
         _is_global_header = true;
     else
@@ -384,7 +404,7 @@ ret_type ffmpeg_source::open(const string& url)
         std::shared_ptr<stream> strm(new stream(this));
         JCHK(strm,rc_new_fail)
         JIF(strm->open(_ctxFormat->streams[i]))
-        _pins[i].reset(strm.get());
+        _pins[i] = strm;
     }
     _eof = false;
     return rt;
@@ -392,10 +412,20 @@ ret_type ffmpeg_source::open(const string& url)
 
 void ffmpeg_source::close()
 {
-    if(nullptr == _ctxFormat)
-        return;
-
+    if(nullptr != _ctxFormat)
+    {
+        //avformat_close_input(&_ctxFormat);
+        _ctxFormat = nullptr;
+    }
     _pins.clear();
-    avformat_close_input(&_ctxFormat);
-    _ctxFormat = nullptr;
+}
+
+void ffmpeg_source::set_base(int64_t time_base)
+{
+    _time_base = time_base;
+}
+
+bool ffmpeg_source::is_eof()
+{
+    return _eof;
 }

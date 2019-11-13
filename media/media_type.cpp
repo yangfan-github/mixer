@@ -117,6 +117,26 @@ bool media_type::is_compress()
         return false;
 }
 
+int64_t media_type::get_duration()
+{
+    MediaMajorType major = get_major();
+    if(MMT_VIDEO == major)
+        return get_video_duration();
+    else if(MMT_AUDIO == major)
+        return get_audio_duration();
+    else
+        return 0;
+}
+
+void media_type::set_duration(int64_t duration)
+{
+    MediaMajorType major = get_major();
+    if(MMT_VIDEO == major)
+        set_video_duration(duration);
+    else if(MMT_AUDIO == major)
+        set_audio_duration(duration);
+}
+
 void media_type::set_video_format(VideoMediaType vmt)
 {
     if(VMT_NONE < vmt && VMT_NB > vmt)
@@ -223,7 +243,7 @@ void media_type::set_audio_channel(int channels)
         }
         else
             _channel_layout = 0;
-        _channel = _channel;
+        _channel = channels;
     }
 }
 
@@ -273,20 +293,20 @@ int media_type::get_audio_frame_size()
     return _frame_size;
 }
 
-ret_type media_type::set_audio_frame_duration(int64_t duration)
+ret_type media_type::set_audio_duration(int64_t duration)
 {
     JCHK(0 <= duration,rc_param_invalid)
-    int frame_size = int((double)_sample_rate * duration / ONE_SECOND_UNIT + 0.5);
+    int frame_size = av_rescale_rnd(_sample_rate, duration, ONE_SECOND_UNIT, AV_ROUND_DOWN);
     set_audio_frame_size(frame_size);
     return rc_ok;
 }
 
-int64_t media_type::get_audio_frame_duration()
+int64_t media_type::get_audio_duration()
 {
     if(0 >= _sample_rate)
         return 0;
     else
-        return _frame_size / _sample_rate * ONE_SECOND_UNIT;
+        return av_rescale_rnd(ONE_SECOND_UNIT, _frame_size, _sample_rate, AV_ROUND_UP);
 }
 
 void media_type::set_global_header(bool is_global_header)
@@ -338,10 +358,15 @@ int media_type::get_bitrate()
     return _bitrate;
 }
 
-ret_type media_type::copy(media_type* dest,media_type* sour,bool partial)
+media_ptr media_type::create()
 {
-    JCHK(nullptr != dest,rc_param_invalid)
-    JCHK(nullptr != sour,rc_param_invalid)
+    return media_ptr(new media_type(),[](media_type* mt){delete mt;});
+}
+
+ret_type media_type::copy(media_ptr dest,const media_ptr& sour,bool partial)
+{
+    JCHK(dest,rc_param_invalid)
+    JCHK(sour,rc_param_invalid)
 
     ret_type rt = rc_ok;
     if(dest == sour)
@@ -423,11 +448,11 @@ ret_type media_type::copy(media_type* dest,media_type* sour,bool partial)
     return rt;
 }
 
-bool media_type::compare(media_type* mt1,media_type* mt2)
+bool media_type::compare(const media_ptr& mt1,const media_ptr& mt2)
 {
     if(mt1 == mt2)
         return true;
-    if(nullptr == mt1 || nullptr == mt2)
+    if(!mt1 || !mt2)
         return false;
 
     if(mt1->get_major() != mt2->get_major())

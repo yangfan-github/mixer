@@ -16,9 +16,9 @@ class ffmpeg_render : public media_render
             public:
                 stream(ffmpeg_render* render);
                 virtual ~stream();
-                ret_type deliver(media_frame* frame);
+                ret_type deliver(frame_ptr frame);
                 ret_type open();
-                ret_type convert(AVPacket& pkt,media_frame* frame);
+                ret_type convert(AVPacket& pkt,frame_ptr frame);
                 void close();
         };
         friend class stream;
@@ -38,12 +38,13 @@ class ffmpeg_render : public media_render
         virtual ~ffmpeg_render();
         PLUGIN_DECLARE
     protected:
-        ret_type set_media_type(input_pin* pin,media_type* mt);
-        std::shared_ptr<input_pin> create_pin(media_type* mt);
+        ret_type set_media_type(input_pin* pin,media_ptr mt);
+        input_pin_ptr create_pin(media_ptr mt);
         ret_type open(const string& url);
         ret_type process();
-        ret_type write(stream* strm,media_frame* frame);
+        ret_type write(stream* strm,frame_ptr frame);
         void close();
+        bool is_open();
 };
 
 #endif // FFMPEG_RENDER_H

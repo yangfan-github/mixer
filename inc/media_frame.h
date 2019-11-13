@@ -4,6 +4,9 @@
 #include <mutex>
 #include <list>
 
+class media_frame;
+typedef std::shared_ptr<media_frame> frame_ptr;
+
 const int64_t ONE_SECOND_UNIT = 10000000;
 const int64_t MEDIA_FRAME_NONE_TIMESTAMP  = 0x8000000000000001;                         //None Timestamp
 
@@ -32,23 +35,22 @@ class media_frame : public std::enable_shared_from_this<media_frame>
             info();
             void reset();
         } _info;
-    public:
         media_frame();
         virtual ~media_frame();
+    public:
         ret_type alloc(size_t len);
         void* get_buf();
         size_t get_len();
-        static ret_type copy(media_frame* dest,media_frame* sour);
+        static frame_ptr create();
+        static ret_type copy(frame_ptr dest,frame_ptr sour);
     protected:
     private:
 };
 
 class media_frame_buf
 {
-    public:
-        typedef std::shared_ptr<media_frame> FrameType;
     protected:
-        typedef std::list<FrameType> FrameSet;
+        typedef std::list<frame_ptr> FrameSet;
         typedef FrameSet::iterator FrameIt;
     protected:
         FrameSet _frames;
@@ -61,8 +63,9 @@ class media_frame_buf
         int64_t front();
         void reset();
         bool empty();
-        ret_type push(media_frame* frame);
-        bool peek(FrameType& frame);
+        ret_type push(const frame_ptr& frame);
+        bool peek(frame_ptr& frame);
         bool pop();
+        bool is_eof();
 };
 #endif // MEDIA_FRAME_H

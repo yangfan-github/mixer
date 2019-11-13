@@ -7,6 +7,8 @@ using namespace boost;
 #include "dump.h"
 #include "media_id.h"
 
+class media_type;
+typedef std::shared_ptr<media_type> media_ptr;
 
 class AVCodecDescriptor;
 class media_type : public std::enable_shared_from_this<media_type>
@@ -32,9 +34,9 @@ class media_type : public std::enable_shared_from_this<media_type>
         uint8_t* _extra_data;
         int _extra_size;
         int _bitrate;
-    public:
         media_type();
         virtual ~media_type();
+    public:
         void set_major(MediaMajorType major);
         MediaMajorType get_major();
         const char* get_major_name();
@@ -43,6 +45,8 @@ class media_type : public std::enable_shared_from_this<media_type>
         const char* get_sub_name();
         int get_props();
         bool is_compress();
+        int64_t get_duration();
+        void set_duration(int64_t duration);
         void set_video_format(VideoMediaType vmt);
         VideoMediaType get_video_format();
         void set_video_width(int width);
@@ -67,8 +71,8 @@ class media_type : public std::enable_shared_from_this<media_type>
         int get_audio_sample_rate();
         void set_audio_frame_size(int frame_size);
         int get_audio_frame_size();
-        ret_type set_audio_frame_duration(int64_t duration);
-        int64_t get_audio_frame_duration();
+        ret_type set_audio_duration(int64_t duration);
+        int64_t get_audio_duration();
         void set_global_header(bool is_global_header);
         bool get_global_header();
         ret_type set_extra_data(uint8_t* data,int size);
@@ -78,8 +82,9 @@ class media_type : public std::enable_shared_from_this<media_type>
         int get_bitrate();
         ret_type load(property_tree::ptree& pt);
         ret_type save(property_tree::ptree& pt);
-        static ret_type copy(media_type* dest,media_type* sour,bool partial = false);
-        static bool compare(media_type* mt1,media_type* mt2);
+        static media_ptr create();
+        static ret_type copy(media_ptr dest,const media_ptr& sour,bool partial = false);
+        static bool compare(const media_ptr& mt1,const media_ptr& mt2);
     protected:
         static MediaMajorType get_major_by_name(const string& name);
         static const AVCodecDescriptor* get_descriptor(MediaSubType type);

@@ -5,9 +5,9 @@
 class ffmpeg_audio_resample : public media_transform
 {
     protected:
-        std::shared_ptr<media_frame> _frame;
+        frame_ptr _frame;
         SwrContext* _ctxSwr;
-        std::shared_ptr<media_type> _mt_resample;
+        media_ptr _mt_resample;
         media_frame::info _info_sample;
     public:
         ffmpeg_audio_resample();
@@ -15,12 +15,12 @@ class ffmpeg_audio_resample : public media_transform
         PLUGIN_DECLARE
     protected:
         //media_filter
-        ret_type set_media_type(input_pin* pin,media_type* mt);
-        ret_type set_media_type(output_pin* pin,media_type* mt);
-        ret_type process(input_pin* pin,media_frame* frame);
+        ret_type set_media_type(input_pin* pin,media_ptr mt);
+        ret_type set_media_type(output_pin* pin,media_ptr mt);
+        ret_type process(input_pin* pin,frame_ptr frame);
     private:
-        ret_type open(media_type* mt_in,media_type* mt_out);
-        ret_type audio_sample(media_frame* frame);
+        ret_type open(media_ptr mt_in,media_ptr mt_out);
+        ret_type audio_sample(frame_ptr frame);
         void close();
 };
 

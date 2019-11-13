@@ -29,11 +29,15 @@ media_frame::~media_frame()
 
 ret_type media_frame::alloc(size_t len)
 {
-    _buf = realloc(_buf,len);
     if(0 < len)
     {
-        JCHK(_buf,rc_new_fail)
+        JCHK(_buf = realloc(_buf,len),rc_new_fail)
         memset(_buf,0,len);
+    }
+    else
+    {
+        free(_buf);
+        _buf = nullptr;
     }
     _len = len;
     return rc_ok;
@@ -49,10 +53,15 @@ size_t media_frame::get_len()
     return _len;
 }
 
-ret_type media_frame::copy(media_frame* dest,media_frame* sour)
+frame_ptr media_frame::create()
 {
-    JCHK(nullptr != dest,rc_param_invalid)
-    JCHK(nullptr != sour,rc_param_invalid)
+    return frame_ptr(new media_frame(),[](media_frame* frame){delete frame;});
+}
+
+ret_type media_frame::copy(frame_ptr dest,frame_ptr sour)
+{
+    JCHK(dest,rc_param_invalid)
+    JCHK(sour,rc_param_invalid)
 
     dest->_info = sour->_info;
 
@@ -99,12 +108,12 @@ bool media_frame_buf::empty()
     return _frames.empty();
 }
 
-ret_type media_frame_buf::push(media_frame* frame)
+ret_type media_frame_buf::push(const frame_ptr& frame)
 {
     unique_lock<std::mutex> lck(_mt);
-    if(nullptr != nullptr)
+    if(frame)
     {
-        _frames.push_back(FrameType(frame));
+        _frames.push_back(frame);
         if(true == _eof)
             _eof = false;
     }
@@ -113,7 +122,7 @@ ret_type media_frame_buf::push(media_frame* frame)
     return rc_ok;
 }
 
-bool media_frame_buf::peek(FrameType& frame)
+bool media_frame_buf::peek(frame_ptr& frame)
 {
     unique_lock<std::mutex> lck(_mt);
     FrameIt it = _frames.begin();
@@ -123,7 +132,10 @@ bool media_frame_buf::peek(FrameType& frame)
         return true;
     }
     else
+    {
+        frame.reset();
         return false == _eof;
+    }
 }
 
 bool media_frame_buf::pop()
@@ -137,4 +149,9 @@ bool media_frame_buf::pop()
     }
     else
         return false;
+}
+
+bool media_frame_buf::is_eof()
+{
+    return _eof;
 }

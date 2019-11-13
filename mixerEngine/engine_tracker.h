@@ -1,26 +1,33 @@
 #ifndef ENGINE_TRACKER_H
 #define ENGINE_TRACKER_H
 #include "stdafx.h"
+#include "track_source.h"
 
 class tracker_mixer;
-class engine_tracker : public std::enable_shared_from_this<engine_tracker>
+class engine_tracker
 {
-        typedef list<string> SourceSet;
-        typedef SourceSet::iterator SourceSetIt;
+        friend class tracker_mixer;
+        friend class tracker_source;
     protected:
         tracker_mixer* _mixer;
-        SourceSet _sources;
-        std::shared_ptr<media_type> _mt;
+        media_ptr _mt;
         int _pos_x;
         int _pos_y;
+        SegmentSet _segments;
+        SegmentIt  _it_segment;
+        frame_ptr _frame;
+        track_source_ptr _source;
+        bool _eof;
     public:
         engine_tracker(tracker_mixer* mixer);
         virtual ~engine_tracker();
         ret_type load(property_tree::ptree& pt);
-        ret_type append(property_tree::ptree& pt);
-        media_type* get_media_type();
-        media_frame* get_media_frame();
-    protected:
+        ret_type add_segment(property_tree::ptree& pt);
+        int64_t get_time_base();
+        media_ptr get_media();
+        ret_type add_source(source_ptr source,int64_t time_base,int64_t start);
+        ret_type next_source(SegmentIt& it);
+        ret_type process(engine_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
 };
 
 #endif // ENGINE_TRACKER_H

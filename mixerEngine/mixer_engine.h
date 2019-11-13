@@ -6,15 +6,23 @@
 #include "engine_tracker.h"
 #include "stdafx.h"
 
-class mixer_engine : public mixer
+class mixer_engine : public engine_task
 {
     protected:
+        typedef list<render_ptr> RenderSet;
+        typedef RenderSet::iterator RenderIt;
+    protected:
         std::shared_ptr<engine_source> _source;
+        RenderSet _renders;
+        std::timed_mutex _mt_wait;
+        bool _eof;
     public:
         mixer_engine();
         virtual ~mixer_engine();
         ret_type load(const char* template_file);
         ret_type run(const char* task_file);
+        bool wait(int ms_wait);
+        ret_type process();
 };
 
 #endif // MIXER_ENGINE_H

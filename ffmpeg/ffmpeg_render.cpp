@@ -95,7 +95,7 @@ ffmpeg_render::stream::stream(ffmpeg_render* render)
 ,_avstream(nullptr)
 ,_ctxBSF(nullptr)
 {
-
+    memset(&_pkt_out,0,sizeof(_pkt_out));
 }
 
 ffmpeg_render::stream::~stream()
@@ -103,7 +103,7 @@ ffmpeg_render::stream::~stream()
     close();
 }
 
-ret_type ffmpeg_render::stream::deliver(media_frame* frame)
+ret_type ffmpeg_render::stream::deliver(frame_ptr frame)
 {
     ret_type rt;
     if(nullptr != frame)
@@ -269,10 +269,10 @@ ret_type ffmpeg_render::stream::open()
     return rc_ok;
 }
 
-ret_type ffmpeg_render::stream::convert(AVPacket& pkt,media_frame* frame)
+ret_type ffmpeg_render::stream::convert(AVPacket& pkt,frame_ptr frame)
 {
     ret_type rt = rc_ok;
-    if(nullptr != frame)
+    if(frame)
     {
         JIF(convert_frame_to_packet(pkt,&_avstream->time_base,frame))
         pkt.stream_index = _avstream->index;
@@ -358,15 +358,15 @@ void ffmpeg_render::stream::close()
 		av_bitstream_filter_close(_ctxBSF);
 		_ctxBSF = nullptr;
 	}
-    if(nullptr != _avstream->codec->extradata)
-    {
-        av_free(_avstream->codec->extradata);
-        _avstream->codec->extradata = nullptr;
-    }
-    _avstream->codec->extradata_size = 0;
 	if(nullptr != _avstream)
 	{
-        _avstream = NULL;
+        if(nullptr != _avstream->codec->extradata)
+        {
+            av_free(_avstream->codec->extradata);
+            _avstream->codec->extradata = nullptr;
+        }
+        _avstream->codec->extradata_size = 0;
+        _avstream = nullptr;
 	}
 }
 
@@ -391,20 +391,22 @@ uint32_t ffmpeg_render::cls_priority(const char* info,media_type* mt_input,media
     return 1;
 }
 
-ret_type ffmpeg_render::set_media_type(input_pin* pin,media_type* mt)
+ret_type ffmpeg_render::set_media_type(input_pin* pin,media_ptr mt)
 {
     return rc_ok;
 }
 
-std::shared_ptr<input_pin> ffmpeg_render::create_pin(media_type* mt)
+input_pin_ptr ffmpeg_render::create_pin(media_ptr mt)
 {
-    std::shared_ptr<input_pin> pin;
-    JCHKR(nullptr != mt,rc_param_invalid,pin)
+    input_pin_ptr pin;
+    JCHKR(mt,rc_param_invalid,pin)
+
     std::shared_ptr<stream> strm(new stream(this));
     JCHKR(strm,rc_new_fail,pin)
+
     JCHKR(IS_OK(strm->set_media_type(mt)),rc_param_invalid,pin)
     _streams.insert(_streams.end(),strm);
-    pin.reset(strm.get(),pin_deleter<input_pin>(this));
+    pin.reset(strm.get(),pin_deleter<input_pin>(shared_from_this()));
     return pin;
 }
 
@@ -453,12 +455,12 @@ ret_type ffmpeg_render::process()
     while(true)
     {
         std::shared_ptr<stream> strm;
-        std::shared_ptr<media_frame> frame;
+        frame_ptr frame;
         for(StreamIt it=_streams.begin() ; it != _streams.end() ; ++it)
         {
-            std::shared_ptr<media_frame> frame_temp;
+            frame_ptr frame_temp;
             std::shared_ptr<stream> strm_temp = *it;
-            if(strm_temp->is_connect() && strm->peek(frame_temp))
+            if(strm_temp->is_connect() && strm_temp->peek(frame_temp))
             {
                 if(frame_temp)
                 {
@@ -474,18 +476,19 @@ ret_type ffmpeg_render::process()
         }
         if(frame)
         {
-            JIF(write(strm.get(),frame.get()))
+            JIF(write(strm.get(),frame))
             JCHK(strm->pop(),rc_fail);
         }
         else
         {
             close();
+            break;
         }
     }
     return rt;
 }
 
-ret_type ffmpeg_render::write(stream* strm,media_frame* frame)
+ret_type ffmpeg_render::write(stream* strm,frame_ptr frame)
 {
     ret_type rt;
     if(nullptr == _ctxFormat)
@@ -510,7 +513,7 @@ ret_type ffmpeg_render::write(stream* strm,media_frame* frame)
 
     if(pkt.dts > pkt.pts)
     {
-        media_type* mt = strm->get_media_type();
+        media_ptr mt = strm->get_media_type();
         TRACE(dump::warn,FORMAT_STR("stream[%1%:%2%-%3%] write packet PTS:%4% < DTS:%5%",
             %strm->_avstream->index%mt->get_major_name()
             %mt->get_sub_name()%pkt.pts%pkt.dts))
@@ -557,5 +560,11 @@ void ffmpeg_render::close()
         }
         avformat_free_context(_ctxFormat);
         _ctxFormat = nullptr;
+        _url.clear();
     }
+}
+
+bool ffmpeg_render::is_open()
+{
+    return !_url.empty();
 }

@@ -13,10 +13,5 @@
 
 extern "C"
 {
-    std::shared_ptr<mixer> create()
-    {
-        std::shared_ptr<mixer_engine> me(new mixer_engine());
-        return std::dynamic_pointer_cast<mixer>(me);
-    }
 }
 
