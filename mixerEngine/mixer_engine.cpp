@@ -105,8 +105,10 @@ ret_type mixer_engine::run(const char* task_file)
     {
         JCHKM(false,rc_param_invalid,FORMAT_STR("load task file:[%1%] fial",%task_file))
     }
-    JIF(g_pool.push(this))
+    _source->get_time_base();
+    _time = MEDIA_FRAME_NONE_TIMESTAMP;
     _eof = false;
+    JIF(g_pool.push(this))
     return rt;
 }
 
@@ -157,6 +159,7 @@ ret_type mixer_engine::process()
         }
         if(eof)
         {
+            _renders.clear();
             _eof = true;
             rt = engine_task::rc_eof;
             if(!_mt_wait.try_lock())

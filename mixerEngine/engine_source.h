@@ -67,7 +67,7 @@ class engine_source :  public media_filter
         ret_type set_media_type(output_pin* pin,media_ptr mt);
         ret_type load(property_tree::ptree& pt);
         std::shared_ptr<tracker_mixer> find(string& path);
-        int64_t get_time_base();
+        void get_time_base();
         ret_type append(property_tree::ptree& segment);
         ret_type process(engine_task* task);
         ret_type add_segment(SegmentIt it);

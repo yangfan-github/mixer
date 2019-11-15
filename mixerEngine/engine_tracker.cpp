@@ -112,7 +112,10 @@ ret_type engine_tracker::next_source(SegmentIt& it)
         ++it;
 
     if(it == _segments.end())
+    {
+        _segments.clear();
         return engine_task::rc_eof;
+    }
 
     {
         unique_lock<std::mutex> lck(_mixer->_source->_mt_tracker);
@@ -127,6 +130,7 @@ ret_type engine_tracker::next_source(SegmentIt& it)
 
 int64_t engine_tracker::get_time_base()
 {
+    _eof = false;
     SegmentIt it = _segments.begin();
     return it == _segments.end() ? MEDIA_FRAME_NONE_TIMESTAMP : it->first;
 }

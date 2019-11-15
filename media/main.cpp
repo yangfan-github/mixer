@@ -10,6 +10,8 @@
 // included in the resulting library.
 #include "global.h"
 #include "../inc/media.h"
+#include <boost/filesystem.hpp>
+using namespace boost::filesystem;
 
 extern "C"
 {
@@ -19,8 +21,8 @@ extern "C"
     }
 }
 
-filter_deleter::filter_deleter(void* handle,PLUGIN_RELEASE_FILTER_FUNC func_release)
-:_handle(handle)
+filter_deleter::filter_deleter(const shared_library& lib,PLUGIN_RELEASE_FILTER_FUNC* func_release)
+:_lib(lib)
 ,_func_release(func_release)
 {
 }
@@ -33,61 +35,56 @@ void filter_deleter::operator()(media_filter* filter)
 {
     if(nullptr != filter)
         _func_release(filter);
-    if(nullptr != _handle)
-    {
-        //dlclose(_handle);
-        _handle = nullptr;
-    }
 }
 
 filter_ptr create_filter(const char* type,const char* info,media_type* mt_input,media_type* mt_output,const string& dir)
 {
-    DIR *dp;
-    JCHKMR(nullptr != (dp = opendir(dir.c_str())),rc_param_invalid,FORMAT_STR("open dir:[%1%]",%dir),filter_ptr())
+    if(!exists(dir))
+        return filter_ptr();
 
     uint32_t priority = 0;
-    void* handle = nullptr;
-    CLS_CREATE_FUNC cls_create = nullptr;
-    PLUGIN_RELEASE_FILTER_FUNC filter_release = nullptr;
-    struct dirent *entry;
-    while(nullptr != (entry = readdir(dp)))
+    shared_library lib;
+    CLS_CREATE_FUNC* cls_create = nullptr;
+    PLUGIN_RELEASE_FILTER_FUNC* filter_release = nullptr;
+
+    directory_iterator item_begin(dir);
+    directory_iterator item_end;
+
+    for (; item_begin != item_end; ++item_begin)
     {
-        char* dot = strrchr(entry->d_name,'.');
-        if(nullptr != dot && 0 == strcmp(dot,".so"))
+        path p = *item_begin;
+        if(!is_directory(p))
         {
-            string path = dir;
-            path.append(entry->d_name);
-            void* h = dlopen(path.c_str(),RTLD_NOW);
-            if(nullptr == h)
-                continue;
-            PLUGIN_INIT_FUNC init = (PLUGIN_INIT_FUNC)dlsym(h,PLUGIN_INIT_FUNC_NAME);
-            PLUGIN_ENUM_FILTER_FUNC enum_filter = (PLUGIN_ENUM_FILTER_FUNC)dlsym(h,PLUGIN_ENUM_FILTER_FUNC_NAME);
-            PLUGIN_RELEASE_FILTER_FUNC release_filter = (PLUGIN_RELEASE_FILTER_FUNC)dlsym(h,PLUGIN_RELSEAE_FILTER_FUNC_NAME);
-            if(nullptr == init || nullptr == enum_filter || nullptr == release_filter)
+            fs::error_code ec;
+            shared_library lib_temp;
+            lib_temp.load(p,ec);
+            if(!ec &&
+                lib_temp.has(PLUGIN_INIT_FUNC_NAME) &&
+                lib_temp.has(PLUGIN_ENUM_FILTER_FUNC_NAME) &&
+                lib_temp.has(PLUGIN_RELSEAE_FILTER_FUNC_NAME))
             {
-                dlclose(h);
-                continue;
-            }
-            init(&g_dump,entry->d_name);
-            uint32_t index = 0;
-            CLS_CREATE_FUNC create_func = nullptr;
-            while(enum_filter(index,type,info,mt_input,mt_output,create_func,priority)){++index;}
-            if(create_func == cls_create)
-                dlclose(h);
-            else
-            {
-                handle = h;
-                cls_create = create_func;
-                filter_release = release_filter;
+                 PLUGIN_INIT_FUNC* init = lib_temp.get<PLUGIN_INIT_FUNC>(PLUGIN_INIT_FUNC_NAME);
+                 PLUGIN_ENUM_FILTER_FUNC* enum_filter = lib_temp.get<PLUGIN_ENUM_FILTER_FUNC>(PLUGIN_ENUM_FILTER_FUNC_NAME);
+                 PLUGIN_RELEASE_FILTER_FUNC* release_filter = lib_temp.get<PLUGIN_RELEASE_FILTER_FUNC>(PLUGIN_RELSEAE_FILTER_FUNC_NAME);
+
+                init(&g_dump,p.c_str());
+                uint32_t index = 0;
+                CLS_CREATE_FUNC* create_func = nullptr;
+                while(enum_filter(index,type,info,mt_input,mt_output,create_func,priority)){++index;}
+                if(create_func != cls_create)
+                {
+                    lib = lib_temp;
+                    cls_create = create_func;
+                    filter_release = release_filter;
+                }
             }
         }
     }
-    closedir(dp);
 
-    if(nullptr == handle)
-        return filter_ptr();
+    if(nullptr != cls_create)
+        return filter_ptr(cls_create(),filter_deleter(lib,filter_release));
     else
-        return filter_ptr(cls_create(),filter_deleter(handle,filter_release));
+        return filter_ptr();
 }
 
 ret_type connect(output_pin_ptr pin_out,input_pin_ptr pin_in,media_ptr mt_out,media_ptr mt_in,const string& dir)

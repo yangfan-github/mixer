@@ -205,7 +205,7 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
             frame->_info.dts -= delta;
             frame->_info.pts -= delta;
         }
-        TRACE(dump::info,FORMAT_STR("source demux %1% frame dts:%2%",%_mt->get_major_name()%frame->_info.dts))
+        //TRACE(dump::info,FORMAT_STR("source demux %1% frame dts:%2%",%_mt->get_major_name()%frame->_info.dts))
         JIF(deliver(frame))
     }
     return rt;

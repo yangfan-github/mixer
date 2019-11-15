@@ -10,15 +10,15 @@ typedef uint32_t OBJ_VERSION;
 #define MAKE_VERSION(a,b,c,d) \
 ( ((OBJ_VERSION)d) | ( ((OBJ_VERSION)c) << 8 ) | ( ((OBJ_VERSION)b) << 16 ) | ( ((OBJ_VERSION)a) << 24 ) )
 
-typedef media_filter* (*CLS_CREATE_FUNC)();
-typedef uint32_t (*CLS_PRIORITY_FUNC)(const char* info,media_type* mt_input,media_type* mt_output);
+typedef media_filter* (CLS_CREATE_FUNC)();
+typedef uint32_t (CLS_PRIORITY_FUNC)(const char* info,media_type* mt_input,media_type* mt_output);
 struct class_info
 {
     const char* type;
     const char* name;
     uint32_t version;
-    CLS_CREATE_FUNC func_create;
-    CLS_PRIORITY_FUNC fucn_priority;
+    CLS_CREATE_FUNC* func_create;
+    CLS_PRIORITY_FUNC* fucn_priority;
 };
 
 #ifdef DOM_EXPORTS
@@ -28,16 +28,16 @@ struct class_info
 #endif
 
 
-typedef void (*PLUGIN_INIT_FUNC)(dump* dmp,const char* name);
-typedef bool (*PLUGIN_ENUM_FILTER_FUNC)(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC& func,uint32_t& priority);
-typedef void (*PLUGIN_RELEASE_FILTER_FUNC)(media_filter* filter);
+typedef void (PLUGIN_INIT_FUNC)(dump* dmp,const char* name);
+typedef bool (PLUGIN_ENUM_FILTER_FUNC)(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC*& func,uint32_t& priority);
+typedef void (PLUGIN_RELEASE_FILTER_FUNC)(media_filter* filter);
 
 const char PLUGIN_INIT_FUNC_NAME[] = "init";
 const char PLUGIN_ENUM_FILTER_FUNC_NAME[] = "enum_filter";
 const char PLUGIN_RELSEAE_FILTER_FUNC_NAME[] = "release_filter";
 
 PLUNIN_API void init(dump* dmp,const char* name = nullptr);
-PLUNIN_API bool enum_filter(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC& func,uint32_t& priority);
+PLUNIN_API bool enum_filter(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC*& func,uint32_t& priority);
 PLUNIN_API void release_filter(media_filter* filter);
 
 #define CLS_INFO_DEFINE(base,class,version) \
@@ -68,7 +68,7 @@ extern "C" \
 #define PLUNIN_EXPORT_END \
         } \
     } \
-    bool enum_filter(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC& func,uint32_t& priority) \
+    bool enum_filter(uint32_t& index,const char* type,const char* info,media_type* mt_input,media_type* mt_output,CLS_CREATE_FUNC*& func,uint32_t& priority) \
     { \
         while(index < g_cls.size()) \
         { \

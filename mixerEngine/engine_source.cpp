@@ -97,6 +97,7 @@ int64_t tracker_mixer::get_time_base()
         if(time < time_base || time_base == MEDIA_FRAME_NONE_TIMESTAMP)
             time_base = time;
     }
+    _eof = false;
     return time_base;
 }
 
@@ -210,16 +211,15 @@ std::shared_ptr<tracker_mixer> engine_source::find(string& path)
     return it->second;
 }
 
-int64_t engine_source::get_time_base()
+void engine_source::get_time_base()
 {
-    int64_t time_base = MEDIA_FRAME_NONE_TIMESTAMP;
+    _time_base = MEDIA_FRAME_NONE_TIMESTAMP;
     for(MixerIt it = _mixers.begin() ; it != _mixers.end() ; ++it)
     {
         int64_t time = it->second->get_time_base();
-        if(time < time_base || MEDIA_FRAME_NONE_TIMESTAMP == time_base)
-            time_base = time;
+        if(time < _time_base || MEDIA_FRAME_NONE_TIMESTAMP == _time_base)
+            _time_base = time;
     }
-    return time_base;
 }
 
 ret_type engine_source::append(property_tree::ptree& segment)
@@ -245,13 +245,6 @@ ret_type engine_source::append(property_tree::ptree& segment)
 
 ret_type engine_source::process(engine_task* task)
 {
-    if(MEDIA_FRAME_NONE_TIMESTAMP == _time_base)
-    {
-        _time_base = get_time_base();
-        if(MEDIA_FRAME_NONE_TIMESTAMP == _time_base)
-            return rc_ok;
-    }
-
     if(_mixers.end() == _it_mixer)
     {
         _it_mixer = _mixers.begin();

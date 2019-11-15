@@ -12,6 +12,9 @@
 #include <map>
 #include <mutex>
 
+#include <boost/dll.hpp>
+using namespace boost::dll;
+
 extern "C"
 {
 #ifdef __cplusplus
@@ -29,10 +32,10 @@ extern "C"
 class filter_deleter
 {
     protected:
-        void* _handle;
-        PLUGIN_RELEASE_FILTER_FUNC _func_release;
+        shared_library _lib;
+        PLUGIN_RELEASE_FILTER_FUNC* _func_release;
     public:
-        filter_deleter(void* handle,PLUGIN_RELEASE_FILTER_FUNC func_release);
+        filter_deleter(const shared_library& lib,PLUGIN_RELEASE_FILTER_FUNC func_release);
         virtual ~filter_deleter();
         void operator()(media_filter* filter);
 };

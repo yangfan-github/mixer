@@ -31,6 +31,12 @@ int main(int argc,char *argv[])
         return -1;
 
     mixer_wait(handle);
+
+//    if(!mixer_run(handle,str_task.c_str()))
+//        return -1;
+
+//    mixer_wait(handle);
+
     mixer_delete(handle);
     return 0;
 }
