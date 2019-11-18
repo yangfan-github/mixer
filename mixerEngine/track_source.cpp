@@ -79,7 +79,8 @@ ret_type tracker_source::process()
     {
         if(false == _eof)
         {
-            _tracker->next_source(_it);
+            if(nullptr != _tracker)
+                _tracker->next_source(_it);
             _eof = true;
         }
         if(_buf.is_eof())
@@ -125,52 +126,69 @@ ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start
 
 ret_type tracker_source::pop(engine_task* task,frame_ptr& frame)
 {
-    JCHK(nullptr != task,rc_param_invalid)
+    JCHK(_source,rc_state_invalid)
 
-    bool ok;
-    _time_line = task->_time;
-    frame_ptr frame_out;
-    while((ok = _buf.peek(frame_out)) && frame_out)
+    if(nullptr == task)
     {
-        if(_time_line >= frame_out->_info.pts && _time_line < frame_out->_info.pts + frame_out->_info.duration)
+        while(false == _buf.peek(frame))
         {
-            _buf.pop();
-            frame_out->_info.pts = _time_line;
-            frame_out->_info.dts = _time_line;
-            break;
+            if(_buf.is_eof())
+                return engine_task::rc_eof;
+            _source->process();
         }
-        else if(_time_line < frame_out->_info.pts)
-        {
-            break;
-        }
-        else
-        {
-            _buf.pop();
-        }
+        _buf.pop();
+        return rc_ok;
     }
-    if(true == ok)
+    else
     {
-        if(_time <= _time_line)
+        ret_type rt;
+        _time_line = task->_time;
+        frame_ptr frame_out;
+        while(_buf.peek(frame_out))
         {
-            bool except = false;
-            if(_is_buf.compare_exchange_weak(except,true))
+            if(_time_line >= frame_out->_info.pts && _time_line < frame_out->_info.pts + frame_out->_info.duration)
             {
-                g_pool.push(this);
+                _buf.pop();
+                frame_out->_info.pts = _time_line;
+                frame_out->_info.dts = _time_line;
+                break;
+            }
+            else if(_time_line < frame_out->_info.pts)
+            {
+                break;
+            }
+            else
+            {
+                _buf.pop();
             }
         }
         if(frame_out)
         {
             if(frame_out->_info.pts == _time_line)
                 frame = frame_out;
-            return rc_ok;
+            rt = rc_ok;
         }
         else
         {
-            TRACE(dump::info,"end engine mix")
-            _task = task;
-            return engine_task::rc_again;
+            if(_buf.is_eof())
+                rt = engine_task::rc_eof;
+            else
+            {
+                _task = task;
+                rt = engine_task::rc_again;
+            }
         }
+        if(false == _buf.is_eof())
+        {
+            if(_time <= _time_line)
+            {
+                bool except = false;
+                if(_is_buf.compare_exchange_weak(except,true))
+                {
+                    g_pool.push(this);
+                }
+            }
+        }
+        return rt;
     }
-    else
-        return engine_task::rc_eof;
 }

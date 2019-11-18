@@ -19,6 +19,7 @@ engine_tracker::~engine_tracker()
 
 ret_type engine_tracker::load(property_tree::ptree& pt)
 {
+    ret_type rt;
     media_ptr mt_mixer = _mixer->get_media_type();
     MediaMajorType major = mt_mixer->get_major();
     if(MMT_VIDEO == major)
@@ -55,12 +56,28 @@ ret_type engine_tracker::load(property_tree::ptree& pt)
         _pos_y = y;
         _mt->set_video_width(cx);
         _mt->set_video_height(cy);
+
     }
     else if(MMT_AUDIO == major)
     {
 
     }
-    return rc_ok;
+    JIF(media_type::copy(_mt,mt_mixer,true))
+
+    optional<string> background = pt.get_optional<string>("background");
+    if(background)
+    {
+        source_ptr source = create_filter<media_source>(background.value().c_str());
+        JCHK(source,rc_fail)
+        JIF(source->open(background.value()))
+
+        track_source_ptr ts(new tracker_source(nullptr,_it_segment,0));
+        JCHK(ts,rc_new_fail)
+
+        JIF(ts->set_source(source,_mt,0,0))
+        JIF(ts->pop(nullptr,_background))
+    }
+    return rt;
 }
 
 ret_type engine_tracker::add_segment(property_tree::ptree& pt)
@@ -138,7 +155,11 @@ int64_t engine_tracker::get_time_base()
 ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize)
 {
     if(true == _eof)
+    {
+        if(_background)
+            process(frame,dst_data,dst_linesize,_background);
         return engine_task::rc_eof;
+    }
 
     ret_type rt;
 
@@ -151,6 +172,7 @@ ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst
             return engine_task::rc_eof;
         }
         JCHK(_source = _it_segment->second._source,rc_state_invalid)
+        _frame = _background;
     }
 
     rt = _source->pop(task,_frame);
@@ -158,44 +180,7 @@ ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst
     {
         if(_frame)
         {
-
-            uint8_t *data_sour[8];
-            int linesize_sour[8];
-
-            JIF(convert_frame_to_array(_mt,_frame,data_sour,linesize_sour))
-
-            MediaMajorType major = _mt->get_major();
-
-            if(MMT_VIDEO == major)
-            {
-                uint8_t* dest = dst_data[0];
-                uint8_t* sour = data_sour[0];
-
-                int line_dest = 4 * frame->_info.stride;
-                int height_sour = _mt->get_video_height();
-                int line_sour = 4 * _frame->_info.stride;
-
-                dest += line_dest * _pos_y;
-                for(int i = 0 ; i < height_sour ; ++i)
-                {
-                    memcpy(dest + 4 * _pos_x,sour,line_sour);
-                    sour += line_sour;
-                    dest += line_dest;
-                }
-            }
-            else if(MMT_AUDIO == major)
-            {
-                int16_t* dest = (int16_t*)dst_data[0];
-                int16_t* sour = (int16_t*)data_sour[0];
-                int len = dst_linesize[0]/sizeof(int16_t);
-                for(int i = 0 ; i < len ; ++i)
-                {
-                    if( dest[i] < 0 && sour[i] < 0)
-                        dest[i] = dest[i] + sour[i] + (dest[i] * sour[i] / 32767);
-                    else
-                        dest[i] = dest[i] + sour[i] - (dest[i] * sour[i] / 32767);
-                }
-            }
+            JIF(process(frame,dst_data,dst_linesize,_frame))
         }
     }
     else if(engine_task::rc_eof == rt)
@@ -203,6 +188,49 @@ ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst
         _source.reset();
         _it_segment->second._source.reset();
         return process(task,frame,dst_data,dst_linesize);
+    }
+    return rt;
+}
+
+ret_type engine_tracker::process(frame_ptr dest_frame,uint8_t** dst_data,int* dst_linesize,frame_ptr sour_frame)
+{
+    ret_type rt;
+    uint8_t *data_sour[8];
+    int linesize_sour[8];
+
+    JIF(convert_frame_to_array(_mt,sour_frame,data_sour,linesize_sour))
+
+    MediaMajorType major = _mt->get_major();
+
+    if(MMT_VIDEO == major)
+    {
+        uint8_t* dest = dst_data[0];
+        uint8_t* sour = data_sour[0];
+
+        int line_dest = 4 * dest_frame->_info.stride;
+        int height_sour = _mt->get_video_height();
+        int line_sour = 4 * sour_frame->_info.stride;
+
+        dest += line_dest * _pos_y;
+        for(int i = 0 ; i < height_sour ; ++i)
+        {
+            memcpy(dest + 4 * _pos_x,sour,line_sour);
+            sour += line_sour;
+            dest += line_dest;
+        }
+    }
+    else if(MMT_AUDIO == major)
+    {
+        int16_t* dest = (int16_t*)dst_data[0];
+        int16_t* sour = (int16_t*)data_sour[0];
+        int len = dst_linesize[0]/sizeof(int16_t);
+        for(int i = 0 ; i < len ; ++i)
+        {
+            if( dest[i] < 0 && sour[i] < 0)
+                dest[i] = dest[i] + sour[i] + (dest[i] * sour[i] / 32767);
+            else
+                dest[i] = dest[i] + sour[i] - (dest[i] * sour[i] / 32767);
+        }
     }
     return rt;
 }

@@ -81,6 +81,11 @@ bool input_pin::pop()
     return _buf.pop();
 }
 
+bool input_pin::eof()
+{
+    return _buf.is_eof();
+}
+
 ret_type input_pin::connect(output_pin* pin,It it)
 {
     JCHK(nullptr != pin,rc_param_invalid)

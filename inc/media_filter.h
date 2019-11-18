@@ -42,6 +42,7 @@ class input_pin : public media_pin
         bool is_connect();
         bool peek(frame_ptr& frame);
         bool pop();
+        bool eof();
     protected:
         ret_type connect(output_pin* pin,It it);
 };

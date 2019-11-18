@@ -33,7 +33,7 @@ class tracker_mixer : public output_pin
     public:
         tracker_mixer(engine_source* source);
         virtual ~tracker_mixer();
-        ret_type set_media_type(media_ptr mt);
+        void set_duration(int64_t duration);
         ret_type load(property_tree::ptree& pt_mixer);
         media_ptr find_output(const string& path);
         TrackerType find_tracker(const string& path);

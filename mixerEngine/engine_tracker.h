@@ -16,6 +16,7 @@ class engine_tracker
         SegmentSet _segments;
         SegmentIt  _it_segment;
         frame_ptr _frame;
+        frame_ptr _background;
         track_source_ptr _source;
         bool _eof;
     public:
@@ -28,6 +29,7 @@ class engine_tracker
         ret_type add_source(source_ptr source,int64_t time_base,int64_t start);
         ret_type next_source(SegmentIt& it);
         ret_type process(engine_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
+        ret_type process(frame_ptr dest_frame,uint8_t** dst_data,int* dst_linesize,frame_ptr sour_frame);
 };
 
 #endif // ENGINE_TRACKER_H

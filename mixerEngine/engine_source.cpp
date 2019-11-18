@@ -13,17 +13,17 @@ tracker_mixer::~tracker_mixer()
 {
 }
 
-ret_type tracker_mixer::set_media_type(media_ptr mt)
+void tracker_mixer::set_duration(int64_t duration)
 {
     for(OutputIt it =_outputs.begin() ; it != _outputs.end() ; ++it)
     {
-        media_type::copy(it->second,mt,true);
+        it->second->set_duration(duration);
     }
     for(TrackerIt it = _trackers.begin() ; it != _trackers.end() ; ++ it)
     {
-        media_type::copy(it->second->_mt,mt,true);
+        it->second->_mt->set_duration(duration);
     }
-    return output_pin::set_media_type(mt);
+    _mt->set_duration(duration);
 }
 
 ret_type tracker_mixer::load(property_tree::ptree& pt_mixer)
@@ -61,6 +61,7 @@ ret_type tracker_mixer::load(property_tree::ptree& pt_mixer)
         JCHK(mt_out,rc_new_fail)
         JIF(mt_out->load(pt_output.second))
         JCHK(mt_out->get_major() == _mt->get_major(),rc_param_invalid)
+        JIF(media_type::copy(mt_out,_mt,true))
         JCHK(_outputs.insert(OutputPair(pt_output.first,mt_out)).second,rc_param_invalid)
     }
 
@@ -191,9 +192,7 @@ ret_type engine_source::load(property_tree::ptree& pt)
 
     for(MixerIt it = _mixers.begin() ; it != _mixers.end() ; ++it)
     {
-        media_ptr mt = it->second->get_media_type();
-        mt->set_duration(_duration);
-        it->second->set_media_type(mt);
+        it->second->set_duration(_duration);
     }
 
     _it_mixer = _mixers.end();

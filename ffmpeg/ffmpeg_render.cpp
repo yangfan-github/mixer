@@ -460,9 +460,9 @@ ret_type ffmpeg_render::process()
         {
             frame_ptr frame_temp;
             std::shared_ptr<stream> strm_temp = *it;
-            if(strm_temp->is_connect() && strm_temp->peek(frame_temp))
+            if(strm_temp->is_connect())
             {
-                if(frame_temp)
+                if(strm_temp->peek(frame_temp))
                 {
                     if(!frame || frame_temp->_info.dts < frame->_info.dts)
                     {
@@ -470,7 +470,7 @@ ret_type ffmpeg_render::process()
                         strm = strm_temp;
                     }
                 }
-                else
+                else if(false == strm_temp->eof())
                     return rt;
             }
         }

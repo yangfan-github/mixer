@@ -132,10 +132,7 @@ bool media_frame_buf::peek(frame_ptr& frame)
         return true;
     }
     else
-    {
-        frame.reset();
-        return false == _eof;
-    }
+        return false;
 }
 
 bool media_frame_buf::pop()
