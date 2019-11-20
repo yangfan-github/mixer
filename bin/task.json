@@ -1,0 +1,17 @@
+{
+  "outputs": {
+    "./out.mp4":["video/720p","audio/64k"]
+  },
+  "inputs":[
+    {
+      "trackers":["video/main","audio/main"],
+      "time_base":0,
+      "url":"./task/main.mp4"
+    },
+    {
+      "trackers":["video/teacher","audio/teacher"],
+      "time_base":4000,
+      "url":"./task/main.mp4"
+    }
+  ]
+}
