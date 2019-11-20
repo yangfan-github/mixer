@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <boost/foreach.hpp>
 #include "../inc/media.h"
 #include "../inc/media_filter.h"
 
@@ -47,5 +48,6 @@ ret_type convert_array_to_frame(media_ptr mt,const uint8_t** src_data,const int*
 ret_type convert_avframe_to_frame(media_ptr mt,frame_ptr dest,AVFrame* sour,AVCodecContext* ctxCodec);
 ret_type convert_frame_to_avframe(media_ptr mt,AVFrame* dest,frame_ptr sour,AVCodecContext* ctxCodec);
 void get_audio_sample_rate(const int* supported_samplerates,int& sample_rate);
+void get_option(void* obj,property_tree::ptree& pt);
 
 #endif // GLOBAL_H_INCLUDED

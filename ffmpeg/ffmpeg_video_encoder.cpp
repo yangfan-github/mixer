@@ -144,6 +144,9 @@ ret_type ffmpeg_video_encoder::open(media_type* mt)
             FORMAT_STR("Open media[%1%] encoder fail msg:%2%",
             %mt->get_sub_name()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
+    property_tree::ptree pt = mt->get_codec_option();
+    get_option(_ctxCodec->priv_data,pt);
+
     return mt->set_extra_data(_ctxCodec->extradata,_ctxCodec->extradata_size);
 }
 

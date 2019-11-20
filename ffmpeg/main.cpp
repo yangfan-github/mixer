@@ -208,3 +208,33 @@ void get_audio_sample_rate(const int* supported_samplerates,int& sample_rate)
     }while(0 < ++i);
     sample_rate = sample_rate_result;
 }
+
+void get_option(void* obj,property_tree::ptree& pt)
+{
+    BOOST_FOREACH(property_tree::ptree::value_type &pt_option, pt)
+    {
+        int rl = -1;
+        optional<int> int_value = pt_option.second.get_value_optional<int>();
+        if(int_value)
+            rl = av_opt_set_int(obj,pt_option.first.c_str(),int_value.value(),0);
+        else
+        {
+            optional<double> float_value = pt_option.second.get_value_optional<double>();
+            if(float_value)
+                rl = av_opt_set_double(obj,pt_option.first.c_str(),float_value.value(),0);
+            else
+            {
+                optional<string> str_value = pt_option.second.get_value_optional<string>();
+                if(str_value)
+                {
+                    string str = str_value.value();
+                    rl = av_opt_set(obj,pt_option.first.c_str(),str.c_str(),0);
+                }
+            }
+        }
+        if(0 != rl)
+        {
+            TRACE(dump::warn,FORMAT_STR("set option:[%1%] fail",%pt_option.first))
+        }
+    }
+}

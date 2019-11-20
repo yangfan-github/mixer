@@ -358,6 +358,16 @@ int media_type::get_bitrate()
     return _bitrate;
 }
 
+void media_type::set_codec_option(const property_tree::ptree& pt)
+{
+    _codec_option = pt;
+}
+
+property_tree::ptree media_type::get_codec_option()
+{
+    return _codec_option;
+}
+
 media_ptr media_type::create()
 {
     return media_ptr(new media_type(),[](media_type* mt){delete mt;});
@@ -444,6 +454,7 @@ ret_type media_type::copy(media_ptr dest,const media_ptr& sour,bool partial)
         dest->set_global_header(sour->get_global_header());
         JIF(dest->set_extra_data(sour->get_extra_data(),sour->get_extra_size()))
         dest->set_bitrate(sour->get_bitrate());
+        dest->set_codec_option(sour->get_codec_option());
     }
     return rt;
 }
@@ -578,7 +589,11 @@ ret_type media_type::load(property_tree::ptree& pt)
     {
         set_bitrate(bitrate.value());
     }
-
+    optional<property_tree::ptree&> opt = pt.get_child_optional("codec_option");
+    if(opt)
+        _codec_option = opt.value();
+    else
+        _codec_option.clear();
     return rc_ok;
 }
 
