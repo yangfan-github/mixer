@@ -16,7 +16,7 @@ typedef SegmentSet::iterator SegmentIt;
 typedef pair<SegmentSet::key_type,SegmentSet::mapped_type> SegmentPair;
 
 class engine_tracker;
-class tracker_source : public media_filter , public engine_task
+class tracker_source : public media_filter , public media_task
 {
     protected:
         engine_tracker* _tracker;
@@ -26,7 +26,7 @@ class tracker_source : public media_filter , public engine_task
         source_ptr _source;
         input_pin_ptr _pin;
         bool _eof;
-        engine_task* _task;
+        media_task* _task;
         int64_t _time_line;
         std::atomic<bool> _is_buf;
         int64_t _start;
@@ -38,7 +38,7 @@ class tracker_source : public media_filter , public engine_task
         ret_type process(input_pin* pin,frame_ptr frame);
         ret_type process();
         ret_type set_source(source_ptr source,media_ptr mt,int64_t start,int64_t stop);
-        ret_type pop(engine_task* task,frame_ptr& frame);
+        ret_type pop(media_task* task,frame_ptr& frame);
 };
 
 

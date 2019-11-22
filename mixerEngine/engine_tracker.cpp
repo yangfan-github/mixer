@@ -131,17 +131,17 @@ ret_type engine_tracker::next_source(SegmentIt& it)
     if(it == _segments.end())
     {
         _segments.clear();
-        return engine_task::rc_eof;
+        return media_task::rc_eof;
     }
 
     {
-        unique_lock<std::mutex> lck(_mixer->_source->_mt_tracker);
+        std::unique_lock<std::mutex> lck(_mixer->_source->_mt_tracker);
 
         if(!it->second._source)
         {
             JIF(_mixer->_source->add_segment(it))
         }
-     }
+    }
     return rt;
 }
 
@@ -152,13 +152,13 @@ int64_t engine_tracker::get_time_base()
     return it == _segments.end() ? MEDIA_FRAME_NONE_TIMESTAMP : it->first;
 }
 
-ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize)
+ret_type engine_tracker::process(media_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize)
 {
     if(true == _eof)
     {
         if(_background)
             process(frame,dst_data,dst_linesize,_background);
-        return engine_task::rc_eof;
+        return media_task::rc_eof;
     }
 
     ret_type rt;
@@ -169,7 +169,7 @@ ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst
         if(rt != rc_ok)
         {
             _eof = true;
-            return engine_task::rc_eof;
+            return media_task::rc_eof;
         }
         JCHK(_source = _it_segment->second._source,rc_state_invalid)
         _frame = _background;
@@ -183,7 +183,7 @@ ret_type engine_tracker::process(engine_task* task,frame_ptr frame,uint8_t** dst
             JIF(process(frame,dst_data,dst_linesize,_frame))
         }
     }
-    else if(engine_task::rc_eof == rt)
+    else if(media_task::rc_eof == rt)
     {
         _source.reset();
         _it_segment->second._source.reset();

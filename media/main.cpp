@@ -10,7 +10,10 @@
 // included in the resulting library.
 #include "global.h"
 #include "../inc/media.h"
+#include <boost/regex.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace boost::filesystem;
 
 extern "C"
@@ -232,4 +235,18 @@ ret_type convert_frame_to_array(media_ptr mt,frame_ptr frame,uint8_t** dst_data,
         }
     }
     return rt;
+}
+
+int64_t get_local_time()
+{
+    boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
+    boost::posix_time::ptime beg(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
+    boost::posix_time::time_duration duration = now - beg;
+    return duration.total_milliseconds();
+}
+
+bool parse_url(string url,std::vector<std::string>& values)
+{
+    boost::regex expression("^(\?:([^:/\?#]+)://)\?(\\w+[^/\?#:]*)(\?::(\\d+))\?(/\?(\?:[^\?#/]*/)*)\?([^\?#]*)\?(\\\?(.*))\?");
+    return boost::regex_split(std::back_inserter(values), url, expression);
 }

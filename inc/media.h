@@ -2,6 +2,7 @@
 #define MEDIA_H_INCLUDED
 
 #include "media_filter.h"
+#include "media_thread_pool.h"
 
 
 bool str_cmp(const char* str_1,const char* str_2);
@@ -109,5 +110,19 @@ std::shared_ptr<T> create_filter(const char* info = nullptr,media_ptr mt_input =
 ret_type connect(output_pin_ptr pin_out,input_pin_ptr pin_in,media_ptr mt_out = media_ptr(),media_ptr mt_in = media_ptr(),const string& dir = "./");
 
 ret_type convert_frame_to_array(media_ptr mt,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
+
+int64_t get_local_time();
+
+enum url_section
+{
+    us_protocol = 0,
+    us_host,
+    us_port,
+    us_path,
+    us_file,
+    us_parameters
+};
+
+bool parse_url(string url,std::vector<std::string>& values);
 
 #endif // MEDIA_H_INCLUDED

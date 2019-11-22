@@ -32,7 +32,9 @@ class ffmpeg_render : public media_render
         bool _is_global_header;
         bool _is_image;
         bool _is_header;
+        bool _is_eof;
         AVPacket _pkt_out;
+        int64_t _time;
     public:
         ffmpeg_render();
         virtual ~ffmpeg_render();
@@ -45,6 +47,8 @@ class ffmpeg_render : public media_render
         ret_type write(stream* strm,frame_ptr frame);
         void close();
         bool is_open();
+        bool is_eof();
+        int64_t get_time();
 };
 
 #endif // FFMPEG_RENDER_H

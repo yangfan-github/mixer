@@ -102,7 +102,7 @@ int64_t tracker_mixer::get_time_base()
     return time_base;
 }
 
-ret_type tracker_mixer::process(engine_task* task)
+ret_type tracker_mixer::process(media_task* task)
 {
     if(is_connect())
     {
@@ -126,11 +126,11 @@ ret_type tracker_mixer::process(engine_task* task)
             while(_it_tracker != _trackers.end())
             {
                 rt = _it_tracker->second->process(task,_frame,_data_dest,_linesize_dest);
-                if(rt == engine_task::rc_again)
+                if(rt == media_task::rc_again)
                     return rt;
                 else
                 {
-                    if(rt == engine_task::rc_eof)
+                    if(rt == media_task::rc_eof)
                         ++_count_eof;
                     ++_it_tracker;
                 }
@@ -146,7 +146,7 @@ ret_type tracker_mixer::process(engine_task* task)
         _eof = true;
 
     if(_eof)
-        return engine_task::rc_eof;
+        return media_task::rc_eof;
     else
         return rc_ok;
 }
@@ -242,7 +242,7 @@ ret_type engine_source::append(property_tree::ptree& segment)
     return rt;
 }
 
-ret_type engine_source::process(engine_task* task)
+ret_type engine_source::process(media_task* task)
 {
     if(_mixers.end() == _it_mixer)
     {
@@ -253,18 +253,18 @@ ret_type engine_source::process(engine_task* task)
     while(_it_mixer != _mixers.end())
     {
         ret_type rt = _it_mixer->second->process(task);
-        if(rt == engine_task::rc_again)
+        if(rt == media_task::rc_again)
             return rt;
         else
         {
-            if(rt == engine_task::rc_eof)
+            if(rt == media_task::rc_eof)
                 ++_count_eof;
             ++_it_mixer;
         }
     }
 
     if(_count_eof == _mixers.size())
-        return engine_task::rc_eof;
+        return media_task::rc_eof;
     else
         return  rc_ok;
 }

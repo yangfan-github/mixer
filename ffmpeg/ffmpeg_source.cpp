@@ -191,20 +191,7 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
         {
             JIF(convert_packet_to_frame(frame,pkt,_stream->time_base))
         }
-        if(MEDIA_FRAME_NONE_TIMESTAMP == _time_start)
-        {
-            frame->_info.flag |= MEDIA_FRAME_FLAG_NEWSEGMENT;
-            _time_start = frame->_info.pts;
-            if(MEDIA_FRAME_NONE_TIMESTAMP == _source->_time_start)
-                _source->_time_start = _time_start;
-        }
 
-        if(MEDIA_FRAME_NONE_TIMESTAMP != _source->_time_base)
-        {
-            int64_t delta = _source->_time_start - _source->_time_base;
-            frame->_info.dts -= delta;
-            frame->_info.pts -= delta;
-        }
         //TRACE(dump::info,FORMAT_STR("source demux %1% frame dts:%2%",%_mt->get_major_name()%frame->_info.dts))
         JIF(deliver(frame))
     }
@@ -301,8 +288,12 @@ ffmpeg_source::ffmpeg_source()
 :_ctxFormat(nullptr)
 ,_is_global_header(false)
 ,_eof(false)
+,_time(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_time_base(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_time_start(MEDIA_FRAME_NONE_TIMESTAMP)
+,_time_begin(MEDIA_FRAME_NONE_TIMESTAMP)
+,_time_delta(0)
+,_is_live(false)
 {
     //ctor
 }
@@ -325,9 +316,38 @@ ret_type ffmpeg_source::set_media_type(output_pin* pin,media_ptr mt)
     return pin->get_media_type() ? rc_state_invalid : rc_ok;
 }
 
+ret_type ffmpeg_source::deliver(output_pin* pin,frame_ptr frame)
+{
+    if(!frame)
+        return rc_ok;
+    if(frame->_info.dts > _time)
+    {
+        if(MEDIA_FRAME_NONE_TIMESTAMP == _time)
+        {
+            if(MEDIA_FRAME_NONE_TIMESTAMP == _time_start)
+                _time_start = frame->_info.dts;
+
+            _time_delta = 0;
+            if(_is_live)
+            {
+                if(MEDIA_FRAME_NONE_TIMESTAMP == _time_begin)
+                    _time_begin = get_local_time();
+                else
+                    _time_delta = get_local_time() - _time_begin;
+            }
+            if(MEDIA_FRAME_NONE_TIMESTAMP != _time_base)
+                _time_delta += _time_base - _time_start;
+        }
+        _time = frame->_info.dts;
+    }
+    frame->_info.dts += _time_delta;
+    frame->_info.pts += _time_delta;
+    return rc_ok;
+}
+
 ret_type ffmpeg_source::process()
 {
-    unique_lock<std::mutex> lck(_mt_process);
+    std::unique_lock<std::mutex> lck(_mt_process);
     if(false == _eof)
     {
         JCHK(_ctxFormat,rc_state_invalid)
@@ -375,6 +395,9 @@ ret_type ffmpeg_source::open(const string& url)
     AVFormatContext* ctxFormat;
 	JCHK(ctxFormat = avformat_alloc_context(),rc_new_fail);
 
+	ctxFormat->interrupt_callback.callback = timeout_callback;
+    ctxFormat->interrupt_callback.opaque = this;
+
 	int hr;
     JCHKM(0 <= (hr = avformat_open_input(&ctxFormat,url.c_str(),NULL,NULL)),
             rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
@@ -397,26 +420,39 @@ ret_type ffmpeg_source::open(const string& url)
     else
         _is_global_header = false;
 
+    _is_live = false;
+
+    std::vector<std::string> values;
+    if(parse_url(url,values))
+    {
+        string protocol = values[us_protocol];
+        transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);
+        if(protocol == "rtmp")
+            _is_live = true;
+    }
+
     ret_type rt = rc_ok;
     _pins.resize(_ctxFormat->nb_streams);
-	for(size_t i = 0 ; i < _ctxFormat->nb_streams ; ++i)
-	{
+    for(size_t i = 0 ; i < _ctxFormat->nb_streams ; ++i)
+    {
         std::shared_ptr<stream> strm(new stream(this));
         JCHK(strm,rc_new_fail)
         JIF(strm->open(_ctxFormat->streams[i]))
         _pins[i] = strm;
     }
-    _eof = false;
+    reset();
     return rt;
+}
+
+void ffmpeg_source::exit()
+{
+    _eof = true;
 }
 
 void ffmpeg_source::close()
 {
     if(nullptr != _ctxFormat)
-    {
-        //avformat_close_input(&_ctxFormat);
-        _ctxFormat = nullptr;
-    }
+        avformat_close_input(&_ctxFormat);
     _pins.clear();
 }
 
@@ -425,7 +461,28 @@ void ffmpeg_source::set_base(int64_t time_base)
     _time_base = time_base;
 }
 
+bool ffmpeg_source::is_open()
+{
+    return _ctxFormat != nullptr;
+}
+
 bool ffmpeg_source::is_eof()
 {
     return _eof;
+}
+
+void ffmpeg_source::reset()
+{
+    for(size_t i = 0 ; i < _pins.size() ; ++i)
+        _pins[i]->new_segment();
+    _time = MEDIA_FRAME_NONE_TIMESTAMP;
+    _time_start = MEDIA_FRAME_NONE_TIMESTAMP;
+    _time_begin = MEDIA_FRAME_NONE_TIMESTAMP;
+    _eof = false;
+}
+
+int ffmpeg_source::timeout_callback(void *param)
+{
+    //ffmpeg_source* source = (ffmpeg_source*)param;
+    return 0;
 }

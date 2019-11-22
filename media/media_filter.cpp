@@ -103,6 +103,7 @@ ret_type input_pin::connect(output_pin* pin,It it)
 
 output_pin::output_pin(media_filter* filter)
 :media_pin(filter)
+,_is_new_segment(false)
 {
 
 }
@@ -123,13 +124,30 @@ ret_type output_pin::set_media_type(media_ptr mt)
     return media_pin::set_media_type(mt);
 }
 
+void output_pin::new_segment()
+{
+    _is_new_segment = true;
+}
+
 ret_type output_pin::deliver(frame_ptr frame)
 {
+    if(true == _is_new_segment && frame)
+    {
+        if(0 == (frame->_info.flag & MEDIA_FRAME_FLAG_SYNCPOINT))
+            return rc_ok;
+        frame->_info.flag |= MEDIA_FRAME_FLAG_NEWSEGMENT;
+        _is_new_segment = false;
+    }
+
+    ret_type rt;
+
+    JIF(_filter->deliver(this,frame))
+
     for(input_pin::It it = _pins.begin() ; it != _pins.end() ; ++it)
     {
         (*it)->deliver(frame);
     }
-    return rc_ok;
+    return rt;
 }
 
 ret_type output_pin::connect(input_pin_ptr pin,media_ptr mt)
@@ -196,6 +214,11 @@ ret_type media_filter::set_media_type(output_pin* pin,media_ptr mt)
 ret_type media_filter::process(input_pin* pin,frame_ptr frame)
 {
     return rc_state_invalid;
+}
+
+ret_type media_filter::deliver(output_pin* pin,frame_ptr frame)
+{
+    return rc_ok;
 }
 
 media_transform::media_transform()

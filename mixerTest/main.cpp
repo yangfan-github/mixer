@@ -28,5 +28,6 @@ int main(int argc,char *argv[])
     mixer_wait(handle);
 
     mixer_delete(handle);
+
     return 0;
 }

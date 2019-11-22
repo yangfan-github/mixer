@@ -117,25 +117,20 @@ bool mixer_engine::wait(int ms_wait)
     if(true == _eof)
         return true;
 
-    if(0 == ms_wait)
-        return false;
+    _mt_wait.lock();
+    if(0 > ms_wait)
+    {
+        std::unique_lock<std::timed_mutex> lck(_mt_wait);
+        return true;
+    }
     else
     {
-        _mt_wait.lock();
-        if(0 > ms_wait)
-        {
-            unique_lock<std::timed_mutex> lck(_mt_wait);
-            return true;
-        }
+        if(false == _mt_wait.try_lock_for(std::chrono::milliseconds(ms_wait)))
+            return false;
         else
         {
-            if(false == _mt_wait.try_lock_for(chrono::milliseconds(ms_wait)))
-                return false;
-            else
-            {
-                _mt_wait.unlock();
-                return true;
-            }
+            _mt_wait.unlock();
+            return true;
         }
     }
 }
@@ -146,13 +141,14 @@ ret_type mixer_engine::process()
         _time = 0;
 
     ret_type rt = _source->process(this);
-    if(rt == engine_task::rc_eof)
+    if(rt == media_task::rc_eof)
     {
         bool eof = true;
         for(RenderIt it = _renders.begin() ; it != _renders.end() ; ++it)
         {
-            if((*it)->is_open())
+            if((*it)->is_eof())
             {
+                (*it)->close();
                 eof = false;
                 break;
             }
@@ -161,7 +157,7 @@ ret_type mixer_engine::process()
         {
             _renders.clear();
             _eof = true;
-            rt = engine_task::rc_eof;
+            rt = media_task::rc_eof;
             if(!_mt_wait.try_lock())
                 _mt_wait.unlock();
         }

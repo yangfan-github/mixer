@@ -70,7 +70,7 @@ ret_type tracker_source::process()
         {
             bool except = true;
             _is_buf.compare_exchange_weak(except,false);
-            return engine_task::rc_again;
+            return media_task::rc_again;
         }
         else
             return rc_ok;
@@ -85,7 +85,7 @@ ret_type tracker_source::process()
         }
         if(_buf.is_eof())
         {
-            return engine_task::rc_eof;
+            return media_task::rc_eof;
         }
         else
             return rc_ok;
@@ -124,7 +124,7 @@ ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start
     return rt;
 }
 
-ret_type tracker_source::pop(engine_task* task,frame_ptr& frame)
+ret_type tracker_source::pop(media_task* task,frame_ptr& frame)
 {
     JCHK(_source,rc_state_invalid)
 
@@ -133,7 +133,7 @@ ret_type tracker_source::pop(engine_task* task,frame_ptr& frame)
         while(false == _buf.peek(frame))
         {
             if(_buf.is_eof())
-                return engine_task::rc_eof;
+                return media_task::rc_eof;
             _source->process();
         }
         _buf.pop();
@@ -171,11 +171,11 @@ ret_type tracker_source::pop(engine_task* task,frame_ptr& frame)
         else
         {
             if(_buf.is_eof())
-                rt = engine_task::rc_eof;
+                rt = media_task::rc_eof;
             else
             {
                 _task = task;
-                rt = engine_task::rc_again;
+                rt = media_task::rc_again;
             }
         }
         if(false == _buf.is_eof())

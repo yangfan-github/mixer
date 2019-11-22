@@ -375,6 +375,8 @@ ffmpeg_render::ffmpeg_render()
 ,_is_global_header(false)
 ,_is_image(false)
 ,_is_header(false)
+,_is_eof(false)
+,_time(MEDIA_FRAME_NONE_TIMESTAMP)
 {
     //ctor
 }
@@ -418,9 +420,20 @@ ret_type ffmpeg_render::open(const string& url)
 
     ret_type rt = rc_ok;
 
+    const char* format = nullptr;
+
+    std::vector<std::string> values;
+    if(parse_url(url,values))
+    {
+        string protocol = values[us_protocol];
+        transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);
+        if(protocol == "rtmp")
+            format = "flv";
+    }
+
     int ret;
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-    JCHKM(0 <= (ret = avformat_alloc_output_context2(&_ctxFormat,nullptr,nullptr,url.c_str())),
+    JCHKM(0 <= (ret = avformat_alloc_output_context2(&_ctxFormat,nullptr,format,url.c_str())),
         rc_param_invalid,FORMAT_STR("ffmpeg muxer create url:[%1%] fail,%2%",%url
         %av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
     _is_global_header = 0 != (AVFMT_GLOBALHEADER & _ctxFormat->oformat->flags);
@@ -445,6 +458,7 @@ ret_type ffmpeg_render::open(const string& url)
     {
         JIF((*it)->open())
     }
+    _is_eof = false;
     _url = url;
     return rt;
 }
@@ -478,10 +492,11 @@ ret_type ffmpeg_render::process()
         {
             JIF(write(strm.get(),frame))
             JCHK(strm->pop(),rc_fail);
+            _time = frame->_info.dts;
         }
         else
         {
-            close();
+            _is_eof = true;
             break;
         }
     }
@@ -567,4 +582,14 @@ void ffmpeg_render::close()
 bool ffmpeg_render::is_open()
 {
     return !_url.empty();
+}
+
+bool ffmpeg_render::is_eof()
+{
+    return _is_eof;
+}
+
+int64_t ffmpeg_render::get_time()
+{
+    return _time;
 }

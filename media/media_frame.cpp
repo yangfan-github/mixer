@@ -86,13 +86,13 @@ media_frame_buf::~media_frame_buf()
 
 int64_t media_frame_buf::back()
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     return _frames.empty() ? MEDIA_FRAME_NONE_TIMESTAMP : _frames.back()->_info.dts;
 }
 
 int64_t media_frame_buf::front()
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     return _frames.empty() ? MEDIA_FRAME_NONE_TIMESTAMP : _frames.front()->_info.dts;
 }
 
@@ -104,13 +104,13 @@ void media_frame_buf::reset()
 
 bool media_frame_buf::empty()
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     return _frames.empty();
 }
 
 ret_type media_frame_buf::push(const frame_ptr& frame)
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     if(frame)
     {
         _frames.push_back(frame);
@@ -124,7 +124,7 @@ ret_type media_frame_buf::push(const frame_ptr& frame)
 
 bool media_frame_buf::peek(frame_ptr& frame)
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     FrameIt it = _frames.begin();
     if(it != _frames.end())
     {
@@ -137,7 +137,7 @@ bool media_frame_buf::peek(frame_ptr& frame)
 
 bool media_frame_buf::pop()
 {
-    unique_lock<std::mutex> lck(_mt);
+    std::unique_lock<std::mutex> lck(_mt);
     FrameIt it = _frames.begin();
     if(it != _frames.end())
     {

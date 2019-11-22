@@ -10,7 +10,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
-#include "engine_thread_pool.h"
 
 using namespace boost;
 

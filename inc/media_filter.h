@@ -54,10 +54,12 @@ class output_pin : public media_pin
         friend class input_pin;
     protected:
         input_pin::Set _pins;
+        bool _is_new_segment;
     public:
         output_pin(media_filter* filter);
         virtual ~output_pin();
         ret_type set_media_type(media_ptr mt);
+        void new_segment();
         ret_type deliver(frame_ptr frame);
         ret_type connect(std::shared_ptr<input_pin> pin,media_ptr mt = media_ptr());
         void disconnect_all();
@@ -79,6 +81,8 @@ class media_filter : public std::enable_shared_from_this<media_filter>
         virtual ret_type set_media_type(input_pin* pin,media_ptr mt);
         virtual ret_type set_media_type(output_pin* pin,media_ptr mt);
         virtual ret_type process(input_pin* pin,frame_ptr frame);
+        virtual ret_type deliver(output_pin* pin,frame_ptr frame);
+
 };
 
 template<class Pin>class pin_deleter
@@ -116,8 +120,10 @@ class media_source : public media_filter
         virtual output_pin_ptr get_pin(uint32_t index) = 0;
         virtual ret_type open(const string& url) = 0;
         virtual ret_type process() = 0;
+        virtual void exit() = 0;
         virtual void close() = 0;
         virtual void set_base(int64_t time) = 0;
+        virtual bool is_open() = 0;
         virtual bool is_eof() = 0;
 };
 
@@ -132,6 +138,8 @@ class media_render : public media_filter
         virtual ret_type open(const string& url) = 0;
         virtual void close() = 0;
         virtual bool is_open() = 0;
+        virtual bool is_eof() = 0;
+        virtual int64_t get_time() = 0;
 };
 
 typedef std::shared_ptr<media_render> render_ptr;

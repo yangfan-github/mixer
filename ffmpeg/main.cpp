@@ -9,6 +9,7 @@
 // Feel free to add more files in this project. They will be
 // included in the resulting library.
 #include "global.h"
+
 #include "../inc/ffmpeg.h"
 #include  "ffmpeg_source.h"
 #include  "ffmpeg_render.h"
@@ -238,3 +239,4 @@ void get_option(void* obj,property_tree::ptree& pt)
         }
     }
 }
+

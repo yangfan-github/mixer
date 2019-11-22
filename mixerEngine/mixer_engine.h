@@ -5,7 +5,7 @@
 #include "engine_tracker.h"
 #include "stdafx.h"
 
-class mixer_engine : public engine_task
+class mixer_engine : public media_task
 {
     protected:
         typedef list<render_ptr> RenderSet;
