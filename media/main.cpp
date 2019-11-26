@@ -242,7 +242,7 @@ int64_t get_local_time()
     boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
     boost::posix_time::ptime beg(boost::gregorian::date(1970, boost::gregorian::Jan, 1));
     boost::posix_time::time_duration duration = now - beg;
-    return duration.total_milliseconds();
+    return duration.total_microseconds() * 10;
 }
 
 bool parse_url(string url,std::vector<std::string>& values)

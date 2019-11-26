@@ -29,6 +29,7 @@ class media_frame : public std::enable_shared_from_this<media_frame>
             int64_t duration;
             union
             {
+                int32_t index;
                 int32_t stride;
                 int32_t samples;
             };

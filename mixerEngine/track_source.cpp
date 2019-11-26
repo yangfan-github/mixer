@@ -44,7 +44,7 @@ ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
         if(!frame || frame->_info.dts >= _task->_time)
         {
             TRACE(dump::info,"start engine mix")
-            g_pool.push(_task);
+            g_pool.post(_task);
             _task = nullptr;
         }
     }
@@ -185,7 +185,7 @@ ret_type tracker_source::pop(media_task* task,frame_ptr& frame)
                 bool except = false;
                 if(_is_buf.compare_exchange_weak(except,true))
                 {
-                    g_pool.push(this);
+                    g_pool.post(this);
                 }
             }
         }

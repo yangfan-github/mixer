@@ -126,7 +126,8 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
         _duration = mt->get_audio_duration();
     }
     _stream = stream;
-    return set_media_type(mt);
+    _mt = mt;
+    return rc_ok;
 }
 
 ret_type ffmpeg_source::stream::process(AVPacket& pkt)
@@ -193,6 +194,7 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
         }
 
         //TRACE(dump::info,FORMAT_STR("source demux %1% frame dts:%2%",%_mt->get_major_name()%frame->_info.dts))
+        frame->_info.index = pkt.stream_index;
         JIF(deliver(frame))
     }
     return rt;
@@ -293,7 +295,9 @@ ffmpeg_source::ffmpeg_source()
 ,_time_start(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_time_begin(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_time_delta(0)
+,_begin_method(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_is_live(false)
+,_is_open(false)
 {
     //ctor
 }
@@ -313,7 +317,7 @@ uint32_t ffmpeg_source::cls_priority(const char* info,media_type* mt_input,media
 
 ret_type ffmpeg_source::set_media_type(output_pin* pin,media_ptr mt)
 {
-    return pin->get_media_type() ? rc_state_invalid : rc_ok;
+    return media_type::compare(pin->get_media_type(),mt) ? rc_ok : rc_state_invalid;
 }
 
 ret_type ffmpeg_source::deliver(output_pin* pin,frame_ptr frame)
@@ -332,11 +336,16 @@ ret_type ffmpeg_source::deliver(output_pin* pin,frame_ptr frame)
             {
                 if(MEDIA_FRAME_NONE_TIMESTAMP == _time_begin)
                     _time_begin = get_local_time();
+                if(MEDIA_FRAME_NONE_TIMESTAMP != _time_base)
+                    _time_delta = get_local_time() - _time_begin + _time_base - _time_start;
                 else
-                    _time_delta = get_local_time() - _time_begin;
+                    _time_delta = _time_begin - _time_start;
             }
-            if(MEDIA_FRAME_NONE_TIMESTAMP != _time_base)
-                _time_delta += _time_base - _time_start;
+            else
+            {
+                if(MEDIA_FRAME_NONE_TIMESTAMP != _time_base)
+                    _time_delta += _time_base - _time_start;
+            }
         }
         _time = frame->_info.dts;
     }
@@ -351,6 +360,9 @@ ret_type ffmpeg_source::process()
     if(false == _eof)
     {
         JCHK(_ctxFormat,rc_state_invalid)
+
+        _begin_method = get_local_time();
+        _name_method = "av_read_frame";
 
         AVPacket pkt;
         av_init_packet(&pkt);
@@ -367,6 +379,12 @@ ret_type ffmpeg_source::process()
         {
             if(AVERROR_EOF == ret || -5 == ret)
                 _eof = true;
+            else
+            {
+				char err[AV_ERROR_MAX_STRING_SIZE] = {0};
+				TRACE(dump::warn,FORMAT_STR("url:[%s] demux fail,message:%s",
+                    %_ctxFormat->filename%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+            }
         }
     }
     if(true == _eof)
@@ -392,33 +410,7 @@ ret_type ffmpeg_source::open(const string& url)
         close();
 
 	char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-    AVFormatContext* ctxFormat;
-	JCHK(ctxFormat = avformat_alloc_context(),rc_new_fail);
-
-	ctxFormat->interrupt_callback.callback = timeout_callback;
-    ctxFormat->interrupt_callback.opaque = this;
-
-	int hr;
-    JCHKM(0 <= (hr = avformat_open_input(&ctxFormat,url.c_str(),NULL,NULL)),
-            rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
-            %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
-
-	JCHKM(0 <= (hr = avformat_find_stream_info(ctxFormat,NULL)),
-        rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] find stream fail,message:%2%",
-        %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
-
-	JCHKM(0 < ctxFormat->nb_streams,rc_fail,
-        FORMAT_STR("ffmpeg demuxer can't find stream in url[%1%]",%url));
-
-    _ctxFormat = ctxFormat;
-	av_dump_format(_ctxFormat, 0, "", 0);
-    if(0 == strcmp(_ctxFormat->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2") ||
-        0 == strcmp(_ctxFormat->iformat->name,"flv") ||
-        0 == strcmp(_ctxFormat->iformat->name,"matroska,webm") ||
-        0 == strcmp(_ctxFormat->iformat->name,"3gp"))
-        _is_global_header = true;
-    else
-        _is_global_header = false;
+	JCHK(_ctxFormat = avformat_alloc_context(),rc_new_fail);
 
     _is_live = false;
 
@@ -431,6 +423,36 @@ ret_type ffmpeg_source::open(const string& url)
             _is_live = true;
     }
 
+	_ctxFormat->interrupt_callback.callback = timeout_callback;
+    _ctxFormat->interrupt_callback.opaque = this;
+
+    _begin_method = get_local_time();
+    _name_method = "avformat_open_input";
+
+	int hr;
+    JCHKM(0 <= (hr = avformat_open_input(&_ctxFormat,url.c_str(),NULL,NULL)),
+            rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
+            %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
+
+    _begin_method = get_local_time();
+    _name_method = "avformat_find_stream_info";
+
+	JCHKM(0 <= (hr = avformat_find_stream_info(_ctxFormat,NULL)),
+        rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] find stream fail,message:%2%",
+        %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
+
+	JCHKM(0 < _ctxFormat->nb_streams,rc_fail,
+        FORMAT_STR("ffmpeg demuxer can't find stream in url[%1%]",%url));
+
+	av_dump_format(_ctxFormat, 0, "", 0);
+    if(0 == strcmp(_ctxFormat->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2") ||
+        0 == strcmp(_ctxFormat->iformat->name,"flv") ||
+        0 == strcmp(_ctxFormat->iformat->name,"matroska,webm") ||
+        0 == strcmp(_ctxFormat->iformat->name,"3gp"))
+        _is_global_header = true;
+    else
+        _is_global_header = false;
+
     ret_type rt = rc_ok;
     _pins.resize(_ctxFormat->nb_streams);
     for(size_t i = 0 ; i < _ctxFormat->nb_streams ; ++i)
@@ -441,6 +463,7 @@ ret_type ffmpeg_source::open(const string& url)
         _pins[i] = strm;
     }
     reset();
+    _is_open = true;
     return rt;
 }
 
@@ -454,6 +477,7 @@ void ffmpeg_source::close()
     if(nullptr != _ctxFormat)
         avformat_close_input(&_ctxFormat);
     _pins.clear();
+    _is_open = false;
 }
 
 void ffmpeg_source::set_base(int64_t time_base)
@@ -463,7 +487,7 @@ void ffmpeg_source::set_base(int64_t time_base)
 
 bool ffmpeg_source::is_open()
 {
-    return _ctxFormat != nullptr;
+    return _is_open;
 }
 
 bool ffmpeg_source::is_eof()
@@ -483,6 +507,26 @@ void ffmpeg_source::reset()
 
 int ffmpeg_source::timeout_callback(void *param)
 {
-    //ffmpeg_source* source = (ffmpeg_source*)param;
+    ffmpeg_source* source = (ffmpeg_source*)param;
+    if(true == source->_is_live)
+    {
+        int64_t duration = get_local_time() - source->_begin_method;
+        if(source->_name_method == "av_read_frame")
+        {
+            if(10000000 < duration)
+            {
+                TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+                return 1;
+            }
+        }
+        else
+        {
+            if(50000000 < duration)
+            {
+                TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+                return 1;
+            }
+        }
+    }
     return 0;
 }

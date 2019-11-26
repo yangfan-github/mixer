@@ -11,5 +11,9 @@
 		<Project filename="mixerTest/mixerTest.cbp">
 			<Depends filename="mixerEngine/mixerEngine.cbp" />
 		</Project>
+		<Project filename="import/import.cbp" />
+		<Project filename="importTest/importTest.cbp">
+			<Depends filename="import/import.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>

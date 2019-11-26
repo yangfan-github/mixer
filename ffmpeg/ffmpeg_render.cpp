@@ -108,6 +108,12 @@ ret_type ffmpeg_render::stream::deliver(frame_ptr frame)
     ret_type rt;
     if(nullptr != frame)
     {
+        if(false == _render->_is_open)
+        {
+            JIF(_render->open());
+        }
+        JCHK(_avstream != nullptr,rc_state_invalid)
+
         if(false == _mt->get_global_header() && true == _render->_is_global_header)
         {
             if(AV_CODEC_ID_H264 == _avstream->codec->codec_id || AV_CODEC_ID_HEVC == _avstream->codec->codec_id)
@@ -136,6 +142,7 @@ ret_type ffmpeg_render::stream::deliver(frame_ptr frame)
                 }
             }
         }
+        frame->_info.index = _avstream->index;
     }
     JIF(input_pin::deliver(frame))
     return _render->process();
@@ -265,6 +272,22 @@ ret_type ffmpeg_render::stream::open()
         memset(&_pkt_out,0,sizeof(_pkt_out));
         _pkt_out.dts = AV_NOPTS_VALUE;
         _pkt_out.pts = AV_NOPTS_VALUE;
+        if(nullptr == _render->_master)
+            _render->_master = this;
+        else
+        {
+            media_ptr mt = _render->_master->get_media_type();
+            if(false == mt->is_compress())
+            {
+                if(true == _mt->is_compress())
+                    _render->_master = this;
+            }
+            else if(MMT_AUDIO == mt->get_major())
+            {
+                if(MMT_VIDEO == _mt->get_major())
+                    _render->_master = this;
+            }
+        }
     }
     return rc_ok;
 }
@@ -372,9 +395,11 @@ void ffmpeg_render::stream::close()
 
 ffmpeg_render::ffmpeg_render()
 :_ctxFormat(nullptr)
+,_master(nullptr)
 ,_is_global_header(false)
 ,_is_image(false)
 ,_is_header(false)
+,_is_open(false)
 ,_is_eof(false)
 ,_time(MEDIA_FRAME_NONE_TIMESTAMP)
 {
@@ -415,7 +440,12 @@ input_pin_ptr ffmpeg_render::create_pin(media_ptr mt)
 ret_type ffmpeg_render::open(const string& url)
 {
     JCHK(!url.empty(),rc_param_invalid)
+    _url = url;
+    return open();
+}
 
+ret_type ffmpeg_render::open()
+{
     close();
 
     ret_type rt = rc_ok;
@@ -423,7 +453,7 @@ ret_type ffmpeg_render::open(const string& url)
     const char* format = nullptr;
 
     std::vector<std::string> values;
-    if(parse_url(url,values))
+    if(parse_url(_url,values))
     {
         string protocol = values[us_protocol];
         transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);
@@ -433,14 +463,14 @@ ret_type ffmpeg_render::open(const string& url)
 
     int ret;
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-    JCHKM(0 <= (ret = avformat_alloc_output_context2(&_ctxFormat,nullptr,format,url.c_str())),
-        rc_param_invalid,FORMAT_STR("ffmpeg muxer create url:[%1%] fail,%2%",%url
+    JCHKM(0 <= (ret = avformat_alloc_output_context2(&_ctxFormat,nullptr,format,_url.c_str())),
+        rc_param_invalid,FORMAT_STR("ffmpeg muxer create url:[%1%] fail,%2%",%_url
         %av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
     _is_global_header = 0 != (AVFMT_GLOBALHEADER & _ctxFormat->oformat->flags);
     _is_image = 0 == strcmp(_ctxFormat->oformat->name,"image2");
     if(true == _is_image)
     {
-        _ctxFormat->oformat->video_codec = av_guess_codec(_ctxFormat->oformat,nullptr,url.c_str(),nullptr,AVMEDIA_TYPE_VIDEO);
+        _ctxFormat->oformat->video_codec = av_guess_codec(_ctxFormat->oformat,nullptr,_url.c_str(),nullptr,AVMEDIA_TYPE_VIDEO);
     }
     else if(0 == strcmp(_ctxFormat->oformat->name,"flv") ||
         0 == strcmp(_ctxFormat->oformat->name,"mp4") ||
@@ -450,16 +480,18 @@ ret_type ffmpeg_render::open(const string& url)
         _ctxFormat->oformat->audio_codec = AV_CODEC_ID_AAC;
     }
 
-    JCHKM(0 <= (ret = avio_open2(&_ctxFormat->pb,url.c_str(),AVIO_FLAG_WRITE,nullptr,nullptr)),rc_param_invalid,
-        FORMAT_STR("ffmpeg muxer connect url:[%1%] fail,msg::%2%",%url.c_str()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
-    av_dump_format(_ctxFormat,0,url.c_str(),1);
+    JCHKM(0 <= (ret = avio_open2(&_ctxFormat->pb,_url.c_str(),AVIO_FLAG_WRITE,nullptr,nullptr)),rc_param_invalid,
+        FORMAT_STR("ffmpeg muxer connect url:[%1%] fail,msg::%2%",%_url.c_str()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+    av_dump_format(_ctxFormat,0,_url.c_str(),1);
 
+    _master = nullptr;
     for(StreamIt it = _streams.begin() ; it != _streams.end() ; ++it)
     {
         JIF((*it)->open())
     }
-    _is_eof = false;
-    _url = url;
+    JCHK(nullptr != _master,rc_state_invalid)
+    _is_header = false;
+    _is_open = true;
     return rt;
 }
 
@@ -490,13 +522,17 @@ ret_type ffmpeg_render::process()
         }
         if(frame)
         {
+            if(true == _is_eof)
+                _is_eof = false;
             JIF(write(strm.get(),frame))
             JCHK(strm->pop(),rc_fail);
             _time = frame->_info.dts;
+            //TRACE(dump::info,FORMAT_STR("frame dts:%1%ms render",%(_time/1000)))
         }
         else
         {
             _is_eof = true;
+            close();
             break;
         }
     }
@@ -506,14 +542,13 @@ ret_type ffmpeg_render::process()
 ret_type ffmpeg_render::write(stream* strm,frame_ptr frame)
 {
     ret_type rt;
-    if(nullptr == _ctxFormat)
-    {
-        JIF(open(_url))
-    }
 
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
     if(false == _is_header)
     {
+        if(_master != strm || 0 == (frame->_info.flag & MEDIA_FRAME_FLAG_SYNCPOINT))
+            return rc_ok;
+
 		int ret = avformat_write_header(_ctxFormat,nullptr);
         JCHKM(0 <= ret,rc_fail,
             FORMAT_STR("ffmpeg muxer write file[%1%] header fail,msg:%2%",
@@ -551,37 +586,41 @@ ret_type ffmpeg_render::write(stream* strm,frame_ptr frame)
 
 void ffmpeg_render::close()
 {
-    if(nullptr != _ctxFormat)
+    if(true == _is_open)
     {
-        if(true == _is_header)
+        if(nullptr != _ctxFormat)
         {
-            int ret;
-            char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-            ret = av_write_trailer(_ctxFormat);
-            if(0 != ret)
+            if(true == _is_header)
             {
-                TRACE(dump::warn,FORMAT_STR("ffmpeg muxer write trailer fail,url:[%1%],msg::%2%",
-                    %_ctxFormat->filename%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+                int ret;
+                char err[AV_ERROR_MAX_STRING_SIZE] = {0};
+                ret = av_write_trailer(_ctxFormat);
+                if(0 != ret)
+                {
+                    TRACE(dump::warn,FORMAT_STR("ffmpeg muxer write trailer fail,url:[%1%],msg::%2%",
+                        %_ctxFormat->filename%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+                }
+                _is_header = false;
             }
-            _is_header = false;
-        }
-        if(nullptr != _ctxFormat->pb)
-        {
-            for(StreamIt it = _streams.begin(); it != _streams.end() ; ++it)
+            if(nullptr != _ctxFormat->pb)
             {
-                (*it)->close();
+                for(StreamIt it = _streams.begin(); it != _streams.end() ; ++it)
+                {
+                    (*it)->close();
+                }
+                avio_closep(&_ctxFormat->pb);
             }
-            avio_closep(&_ctxFormat->pb);
+            avformat_free_context(_ctxFormat);
+            _ctxFormat = nullptr;
         }
-        avformat_free_context(_ctxFormat);
-        _ctxFormat = nullptr;
-        _url.clear();
+        _master = nullptr;
+        _is_open = false;
     }
 }
 
 bool ffmpeg_render::is_open()
 {
-    return !_url.empty();
+    return _is_open;
 }
 
 bool ffmpeg_render::is_eof()

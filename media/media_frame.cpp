@@ -11,7 +11,7 @@ void media_frame::info::reset()
     dts = MEDIA_FRAME_NONE_TIMESTAMP;
     flag = 0;
     duration = 0;
-    stride = 0;
+    index = 0;
 }
 
 media_frame::media_frame()

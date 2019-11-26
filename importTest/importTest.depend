@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1574655025 source:/root/work/git/mixer/importTest/main.cpp
+	<stdlib.h>
+	<iostream>
+	"../inc/import.h"
+
+1574653968 /root/work/git/mixer/inc/import.h
+

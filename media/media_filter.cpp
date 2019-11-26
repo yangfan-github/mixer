@@ -157,8 +157,10 @@ ret_type output_pin::connect(input_pin_ptr pin,media_ptr mt)
     ret_type rt;
     if(mt)
     {
-        JIF(set_media_type(mt))
-        JIF(pin->set_media_type(mt))
+        if(!media_type::compare(mt,_mt))
+        {
+            JIF(pin->set_media_type(mt))
+        }
     }
     else if(_mt)
     {

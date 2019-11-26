@@ -108,7 +108,7 @@ ret_type mixer_engine::run(const char* task_file)
     _source->get_time_base();
     _time = MEDIA_FRAME_NONE_TIMESTAMP;
     _eof = false;
-    JIF(g_pool.push(this))
+    JIF(g_pool.post(this))
     return rt;
 }
 
@@ -148,7 +148,6 @@ ret_type mixer_engine::process()
         {
             if((*it)->is_eof())
             {
-                (*it)->close();
                 eof = false;
                 break;
             }

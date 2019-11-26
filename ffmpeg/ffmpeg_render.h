@@ -28,10 +28,12 @@ class ffmpeg_render : public media_render
         ffmpeg_render* _render;
         StreamSet _streams;
         AVFormatContext* _ctxFormat;
+        stream* _master;
         string _url;
         bool _is_global_header;
         bool _is_image;
         bool _is_header;
+        bool _is_open;
         bool _is_eof;
         AVPacket _pkt_out;
         int64_t _time;
@@ -43,12 +45,13 @@ class ffmpeg_render : public media_render
         ret_type set_media_type(input_pin* pin,media_ptr mt);
         input_pin_ptr create_pin(media_ptr mt);
         ret_type open(const string& url);
+        bool is_eof();
+        bool is_open();
+        void close();
+        int64_t get_time();
         ret_type process();
         ret_type write(stream* strm,frame_ptr frame);
-        void close();
-        bool is_open();
-        bool is_eof();
-        int64_t get_time();
+        ret_type open();
 };
 
 #endif // FFMPEG_RENDER_H
