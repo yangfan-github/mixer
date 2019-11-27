@@ -1,7 +1,7 @@
 FROM debian:buster-slim
 RUN apt update \
   && apt install -y --no-install-recommends --no-install-suggests \
-        cmake make g++ yasm wget \
+        cmake make g++ yasm wget bzip2 \
         build-essential libz-dev \
         liblog4cxx-dev libghc-curl-dev libglib2.0-dev \
         libavcodec-dev libavutil-dev libavformat-dev libavresample-dev \
