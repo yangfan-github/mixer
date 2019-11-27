@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
 LIBDIR = -L../bin/lib
 LIB = 
-LDFLAGS = -lpthread -lavcodec -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lboost_system -lboost_date_time
+LDFLAGS = -lboost_system -lboost_date_time -lmedia
 
 INC_DEBUG = $(INC) -ImixerEngine
 CFLAGS_DEBUG = $(CFLAGS) -g
@@ -40,9 +40,9 @@ OBJDIR_RELEASE = ../obj/Release/mixerEngine
 DEP_RELEASE = 
 OUT_RELEASE = ../bin/lib/mixerEngine.so
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/engine_source.o $(OBJDIR_DEBUG)/engine_thread_pool.o $(OBJDIR_DEBUG)/engine_tracker.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/mixer_engine.o $(OBJDIR_DEBUG)/track_source.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)/engine_source.o $(OBJDIR_DEBUG)/engine_tracker.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/mixer_engine.o $(OBJDIR_DEBUG)/track_source.o
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/engine_source.o $(OBJDIR_RELEASE)/engine_thread_pool.o $(OBJDIR_RELEASE)/engine_tracker.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/mixer_engine.o $(OBJDIR_RELEASE)/track_source.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)/engine_source.o $(OBJDIR_RELEASE)/engine_tracker.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/mixer_engine.o $(OBJDIR_RELEASE)/track_source.o
 
 all: debug release
 
@@ -61,9 +61,6 @@ out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
 
 $(OBJDIR_DEBUG)/engine_source.o: engine_source.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c engine_source.cpp -o $(OBJDIR_DEBUG)/engine_source.o
-
-$(OBJDIR_DEBUG)/engine_thread_pool.o: engine_thread_pool.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c engine_thread_pool.cpp -o $(OBJDIR_DEBUG)/engine_thread_pool.o
 
 $(OBJDIR_DEBUG)/engine_tracker.o: engine_tracker.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c engine_tracker.cpp -o $(OBJDIR_DEBUG)/engine_tracker.o
@@ -95,9 +92,6 @@ out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
 
 $(OBJDIR_RELEASE)/engine_source.o: engine_source.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c engine_source.cpp -o $(OBJDIR_RELEASE)/engine_source.o
-
-$(OBJDIR_RELEASE)/engine_thread_pool.o: engine_thread_pool.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c engine_thread_pool.cpp -o $(OBJDIR_RELEASE)/engine_thread_pool.o
 
 $(OBJDIR_RELEASE)/engine_tracker.o: engine_tracker.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c engine_tracker.cpp -o $(OBJDIR_RELEASE)/engine_tracker.o

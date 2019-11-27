@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
 LIBDIR = -L../third-party/ffSDK/lib
 LIB = 
-LDFLAGS = -ldl -lboost_system -lboost_date_time -lboost_filesystem -lavformat
+LDFLAGS = -ldl -lboost_system -lboost_date_time -lboost_filesystem -lboost_regex -lavformat
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
@@ -40,9 +40,9 @@ OBJDIR_RELEASE = ../obj/Release/media
 DEP_RELEASE = 
 OUT_RELEASE = ../bin/lib/media.so
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/dump.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/media_filter.o $(OBJDIR_DEBUG)/media_frame.o $(OBJDIR_DEBUG)/media_type.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)/dump.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/media_filter.o $(OBJDIR_DEBUG)/media_frame.o $(OBJDIR_DEBUG)/media_thread_pool.o $(OBJDIR_DEBUG)/media_type.o
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/dump.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/media_filter.o $(OBJDIR_RELEASE)/media_frame.o $(OBJDIR_RELEASE)/media_type.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)/dump.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/media_filter.o $(OBJDIR_RELEASE)/media_frame.o $(OBJDIR_RELEASE)/media_thread_pool.o $(OBJDIR_RELEASE)/media_type.o
 
 all: debug release
 
@@ -70,6 +70,9 @@ $(OBJDIR_DEBUG)/media_filter.o: media_filter.cpp
 
 $(OBJDIR_DEBUG)/media_frame.o: media_frame.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c media_frame.cpp -o $(OBJDIR_DEBUG)/media_frame.o
+
+$(OBJDIR_DEBUG)/media_thread_pool.o: media_thread_pool.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c media_thread_pool.cpp -o $(OBJDIR_DEBUG)/media_thread_pool.o
 
 $(OBJDIR_DEBUG)/media_type.o: media_type.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c media_type.cpp -o $(OBJDIR_DEBUG)/media_type.o
@@ -101,6 +104,9 @@ $(OBJDIR_RELEASE)/media_filter.o: media_filter.cpp
 
 $(OBJDIR_RELEASE)/media_frame.o: media_frame.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c media_frame.cpp -o $(OBJDIR_RELEASE)/media_frame.o
+
+$(OBJDIR_RELEASE)/media_thread_pool.o: media_thread_pool.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c media_thread_pool.cpp -o $(OBJDIR_RELEASE)/media_thread_pool.o
 
 $(OBJDIR_RELEASE)/media_type.o: media_type.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c media_type.cpp -o $(OBJDIR_RELEASE)/media_type.o

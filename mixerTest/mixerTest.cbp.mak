@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions
 RESINC = 
 LIBDIR = -L../bin/lib
 LIB = 
-LDFLAGS = -Wl,--rpath=../bin/lib/ -ldl -lmedia -lmixerEngine
+LDFLAGS = -Wl,--rpath=../bin/lib/ -lmixerEngine
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g

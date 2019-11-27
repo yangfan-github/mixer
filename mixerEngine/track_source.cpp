@@ -57,7 +57,7 @@ ret_type tracker_source::process()
 
     _source->process();
 
-    bool is_next;
+    bool is_next = false;
     if(_stop != MEDIA_FRAME_NONE_TIMESTAMP)
         is_next = _time + _time_buf >= _stop;
 
