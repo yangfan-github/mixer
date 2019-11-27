@@ -27,7 +27,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/media
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/lib/media.so
+OUT_DEBUG = ../bin/lib/libmedia.so
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -38,7 +38,7 @@ LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/media
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/lib/media.so
+OUT_RELEASE = ../bin/lib/libmedia.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/dump.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/media_filter.o $(OBJDIR_DEBUG)/media_frame.o $(OBJDIR_DEBUG)/media_thread_pool.o $(OBJDIR_DEBUG)/media_type.o
 

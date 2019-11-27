@@ -27,7 +27,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/ffmpeg
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/ffmpeg.so
+OUT_DEBUG = ../bin/libffmpeg.so
 
 INC_RELEASE = $(INC) -Iffmpeg
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -38,7 +38,7 @@ LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/ffmpeg
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/ffmpeg.so
+OUT_RELEASE = ../bin/libffmpeg.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/ffmpeg_video_scale.o $(OBJDIR_DEBUG)/ffmpeg_video_encoder.o $(OBJDIR_DEBUG)/ffmpeg_video_decoder.o $(OBJDIR_DEBUG)/ffmpeg_source.o $(OBJDIR_DEBUG)/ffmpeg_render.o $(OBJDIR_DEBUG)/ffmpeg_audio_resample.o $(OBJDIR_DEBUG)/ffmpeg_audio_encoder.o $(OBJDIR_DEBUG)/ffmpeg_audio_decoder.o
 

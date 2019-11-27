@@ -27,7 +27,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/mixerEngine
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/lib/mixerEngine.so
+OUT_DEBUG = ../bin/lib/libmixerEngine.so
 
 INC_RELEASE = $(INC) -ImixerEngine
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -38,7 +38,7 @@ LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/mixerEngine
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/lib/mixerEngine.so
+OUT_RELEASE = ../bin/lib/libmixerEngine.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/engine_source.o $(OBJDIR_DEBUG)/engine_tracker.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/mixer_engine.o $(OBJDIR_DEBUG)/track_source.o
 
