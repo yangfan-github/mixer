@@ -1,0 +1,31 @@
+stages:
+  - build
+  - make
+  - deploy
+  
+variables:
+  VERSION: "1.$CI_PIPELINE_ID"
+  BUILDDIR: "/builds"
+  LOCALDIR: "/opt/gitlab-runner/builds"
+
+#rtc-sonar:
+#  tags:
+#    - test-rtc-shell
+#  stage: build
+#  only:
+#    - test
+#  script:
+#    - /opt/sonar_analyze.sh
+  
+mixer-build:
+  tags:
+    - lvs12-mixer-shell
+  stage: build
+  only:
+    - develop
+  retry: 2
+  script:
+    - rm -rf ${BUILDDIR}/target/*
+    - docker run --rm -v ${BUILDDIR}/ffmpeg:/data harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
+    - make
+    - cp bin/lib/libimport.so bin/lib/libmixEngine.so ${BUILDDIR}/target/
