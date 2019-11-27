@@ -25,4 +25,8 @@ mixer-build:
     - develop
   retry: 2
   script:
+    - rm -rf ${BUILDDIR}/target/*
     - docker run --rm -v ${BUILDDIR}/ffmpeg:/data harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
+    - make
+    - make install
+    - cp bin/lib/libimport.so bin/lib/libmixEngine.so ${BUILDDIR}/target/
