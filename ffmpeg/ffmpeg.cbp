@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="ffmpeg" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="../bin/ffmpeg" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../bin/" />
+				<Option object_output="../obj/Debug/ffmpeg/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="ffmpeg" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="../bin/ffmpeg" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="../bin/" />
+				<Option object_output="../obj/Release/ffmpeg/" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="ffmpeg" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-std=c++11" />
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-fPIC" />
+			<Add directory="../third-party/ffSDK/include" />
+			<Add directory="../third-party/ffSDK/src" />
+		</Compiler>
+		<Linker>
+			<Add option="-lpthread" />
+			<Add option="-lavcodec" />
+			<Add option="-lavfilter" />
+			<Add option="-lavformat" />
+			<Add option="-lavutil" />
+			<Add option="-lpostproc" />
+			<Add option="-lswresample" />
+			<Add option="-lswscale" />
+			<Add option="-lboost_system" />
+			<Add option="-lboost_date_time" />
+			<Add option="-lmedia" />
+			<Add directory="../bin/lib" />
+		</Linker>
+		<Unit filename="../inc/ffmpeg.h" />
+		<Unit filename="ffmpeg_audio_decoder.cpp" />
+		<Unit filename="ffmpeg_audio_decoder.h" />
+		<Unit filename="ffmpeg_audio_encoder.cpp" />
+		<Unit filename="ffmpeg_audio_encoder.h" />
+		<Unit filename="ffmpeg_audio_resample.cpp" />
+		<Unit filename="ffmpeg_audio_resample.h" />
+		<Unit filename="ffmpeg_render.cpp" />
+		<Unit filename="ffmpeg_render.h" />
+		<Unit filename="ffmpeg_source.cpp" />
+		<Unit filename="ffmpeg_source.h" />
+		<Unit filename="ffmpeg_video_decoder.cpp" />
+		<Unit filename="ffmpeg_video_decoder.h" />
+		<Unit filename="ffmpeg_video_encoder.cpp" />
+		<Unit filename="ffmpeg_video_encoder.h" />
+		<Unit filename="ffmpeg_video_scale.cpp" />
+		<Unit filename="ffmpeg_video_scale.h" />
+		<Unit filename="global.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="stdafx.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
