@@ -25,4 +25,4 @@ mixer-build:
     - develop
   retry: 2
   script:
-    - docker run --rm -v ${BUILDDIR}/ffmpeg:/data harbor.offcncloud.com/offcn_llive/ffmpeg:cpp-build-alpine /bin/bash /data/updateFFmpeg.sh
+    - docker run --rm -v ${BUILDDIR}/ffmpeg:/data harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
