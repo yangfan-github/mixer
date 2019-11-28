@@ -6,7 +6,7 @@
 WRKDIR = `pwd`
 MAKE = make
 
-all: media_media mixerengine_mixerengine ffmpeg_ffmpeg mixertest_mixertest
+all: media_media mixerengine_mixerengine ffmpeg_ffmpeg
 
 media_media: 
 	$(MAKE) -C media all -f media.cbp.mak
@@ -17,10 +17,8 @@ mixerengine_mixerengine: media_media
 ffmpeg_ffmpeg: media_media
 	$(MAKE) -C ffmpeg all -f ffmpeg.cbp.mak
 
-mixertest_mixertest: mixerengine_mixerengine
-	$(MAKE) -C mixerTest all -f mixerTest.cbp.mak
 
-clean: clean_media_media clean_mixerengine_mixerengine clean_ffmpeg_ffmpeg clean_mixertest_mixertest
+clean: clean_media_media clean_mixerengine_mixerengine clean_ffmpeg_ffmpeg
 
 clean_media_media: 
 	$(MAKE) -C media clean -f media.cbp.mak
@@ -31,8 +29,5 @@ clean_mixerengine_mixerengine:
 clean_ffmpeg_ffmpeg: 
 	$(MAKE) -C ffmpeg clean -f ffmpeg.cbp.mak
 
-clean_mixertest_mixertest: 
-	$(MAKE) -C mixerTest clean -f mixerTest.cbp.mak
-
-.PHONY: clean_media_media clean_mixerengine_mixerengine clean_ffmpeg_ffmpeg clean_mixertest_mixertest
+.PHONY: clean_media_media clean_mixerengine_mixerengine clean_ffmpeg_ffmpeg
 
