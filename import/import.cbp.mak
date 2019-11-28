@@ -25,7 +25,7 @@ RCFLAGS_DEBUG = $(RCFLAGS)
 LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
-OBJDIR_DEBUG = ../obj/Debug/mediaTest
+OBJDIR_DEBUG = ../obj/Debug/import
 DEP_DEBUG = 
 OUT_DEBUG = ../bin/lib/libimport.so
 
@@ -36,7 +36,7 @@ RCFLAGS_RELEASE = $(RCFLAGS)
 LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
-OBJDIR_RELEASE = ../obj/Release/mediaTest
+OBJDIR_RELEASE = ../obj/Release/import
 DEP_RELEASE = 
 OUT_RELEASE = ../bin/lib/libimport.so
 
