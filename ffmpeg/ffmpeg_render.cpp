@@ -1,4 +1,5 @@
 #include "ffmpeg_render.h"
+#include<boost/filesystem.hpp>
 
 void get_pps_sps(uint8_t* buf, uint32_t size, bool is264, uint32_t& offset, uint32_t& len)
 {
@@ -478,6 +479,15 @@ ret_type ffmpeg_render::open()
     {
         _ctxFormat->oformat->video_codec = AV_CODEC_ID_H264;
         _ctxFormat->oformat->audio_codec = AV_CODEC_ID_AAC;
+    }
+
+    system::error_code ec;
+    boost::filesystem::path path(_url);
+    path = path.parent_path();
+    if(!boost::filesystem::exists(path))
+    {
+        boost::filesystem::create_directories(path,ec);
+        JCHKM(!ec,rc_param_invalid,FORMAT_STR("create directory[%1%] fail,message:%2%",%_url%ec.message()))
     }
 
     JCHKM(0 <= (ret = avio_open2(&_ctxFormat->pb,_url.c_str(),AVIO_FLAG_WRITE,nullptr,nullptr)),rc_param_invalid,
