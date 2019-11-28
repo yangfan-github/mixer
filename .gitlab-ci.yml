@@ -23,8 +23,8 @@ mixer-build:
   stage: build
   only:
     - develop
-  retry: 1
+  retry: 2
   script:
-    - rm -rf ${BUILDDIR}/target/*
     - pwd
+    - rm -rf ${BUILDDIR}/target/*
     - docker run --rm -v ${BUILDDIR}/ffmpeg:/data -v $(pwd):/src harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
