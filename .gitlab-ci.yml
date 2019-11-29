@@ -26,5 +26,5 @@ mixer-build:
   retry: 2
   script:
     - pwd
-    - rm -rf ${BUILDDIR}/target/*
+    - rm -rf ${BUILDDIR}/ffmpeg/target/*
     - docker run --rm -v ${BUILDDIR}/ffmpeg:/data -v $(pwd):/src harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
