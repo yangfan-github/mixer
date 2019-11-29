@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
 LIBDIR = -L../bin/lib
 LIB = 
-LDFLAGS = -lpthread -lavcodec -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lboost_system -lboost_date_time -lmedia
+LDFLAGS = -lpthread -lavcodec -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lboost_system -lboost_filesystem -lboost_date_time -lmedia
 
 INC_DEBUG = $(INC) -Iffmpeg
 CFLAGS_DEBUG = $(CFLAGS) -g

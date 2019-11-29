@@ -1,0 +1,61 @@
+{
+  "video": {
+    "media_type": {
+	"major":"video",
+      "video_width":1280,
+      "video_height":720,
+      "video_fps":25
+    },
+    "outputs":{
+      "720p":{
+        "sub":"h264",
+        "bitrate":2000000,
+        "video_width":1280,
+        "video_height":720,
+	  "codec_option":{
+	    "preset":"medium",
+	    "tune":"film",
+	    "profile":"high"
+	}
+      }
+    },
+    "trackers":{
+	"main":{
+        "pos_x":0,
+        "pos_y":72,
+        "pos_cx":1024,
+        "pos_cy":576,
+	  "background":"./template/main.jpg"
+      },
+	"teacher":{
+        "pos_x":1024,
+        "pos_y":0,
+        "pos_cx":256,
+        "pos_cy":192,
+	  "background":"./template/teacher.jpg"
+      }
+    }
+  },
+  "audio":{
+    "media_type": {
+	"major":"audio",
+      "audio_channel":2,
+      "audio_sample_rate":44100
+    },
+    "outputs":{
+      "64k":{
+        "sub":"aac",
+        "bitrate":64000
+      }
+    },
+    "trackers":{
+      "main":{
+        "volume":50
+      },
+      "teacher":{
+        "volume":50
+      }
+    }
+  }
+}
+
