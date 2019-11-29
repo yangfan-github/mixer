@@ -3,8 +3,8 @@ my English is poor so 下面全是中文
 这个项目是一个多路视音频混合转码项目，基于boost，ffmpeg，没有用到任何系统相关API，理论上可跨平台.   
 
 编译  
-1.编译boost 1.7 或以上版本      输出到系统目录 
-2.编译ffmpeg ./thrd-party/ffSDK  输出到系统目录
+1.编译boost 1.7 或以上版本      输出到系统目录   
+2.编译ffmpeg ./thrd-party/ffSDK  输出到系统目录  
 3.make ver=debug   
 
 输出  
