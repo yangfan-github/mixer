@@ -6,11 +6,11 @@ my English is poor so 下面全是中文
 2.编译ffmpeg ./thrd-party/ffSDK
 3.make ver=debug 输出
 ./bin/lib/libmedia.so         //放置在系统目录  
-./bin/lib/libmixerEngine.so   //放置在系统目录
-./bin/lib/libimport.so        //放置在系统目录
-./bin/libffmpeg.so      //ffmpeg插件 必须存放在主程序工作目录
-./bin/mixerTest         //混合转码测试程序
-./bin/importTest        //转推测试程序 
+./bin/lib/libmixerEngine.so   //放置在系统目录  
+./bin/lib/libimport.so        //放置在系统目录  
+./bin/libffmpeg.so      //ffmpeg插件 必须存放在主程序工作目录  
+./bin/mixerTest         //混合转码测试程序  
+./bin/importTest        //转推测试程序  
  
-./inc  //头文件目录
+./inc  //头文件目录  
 
