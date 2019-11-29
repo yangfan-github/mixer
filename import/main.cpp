@@ -11,19 +11,17 @@
 
 #include "stream_import.h"
 
-extern "C"
+void* import_start(const char* sour,const char* dest)
 {
-    void* import_start(const char* sour,const char* dest)
-    {
-        JCHKR(nullptr != sour,rc_param_invalid,nullptr)
-        JCHKR(nullptr != dest,rc_param_invalid,nullptr)
-        return new stream_import(sour,dest);
-    }
-    bool import_stop(void* handle)
-    {
-        JCHKR(nullptr != handle,rc_param_invalid,false)
-        stream_import* si = (stream_import*)handle;
-        delete si;
-        return true;
-    }
+    JCHKR(nullptr != sour,rc_param_invalid,nullptr)
+    JCHKR(nullptr != dest,rc_param_invalid,nullptr)
+    return new stream_import(sour,dest);
+}
+
+bool import_stop(void* handle)
+{
+    JCHKR(nullptr != handle,rc_param_invalid,false)
+    stream_import* si = (stream_import*)handle;
+    delete si;
+    return true;
 }
