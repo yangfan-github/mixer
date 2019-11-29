@@ -54,6 +54,7 @@
 			<Add option="-lswresample" />
 			<Add option="-lswscale" />
 			<Add option="-lboost_system" />
+			<Add option="-lboost_filesystem" />
 			<Add option="-lboost_date_time" />
 			<Add option="-lmedia" />
 			<Add directory="../bin/lib" />
