@@ -429,10 +429,14 @@ ret_type ffmpeg_source::open(const string& url)
     _begin_method = get_local_time();
     _name_method = "avformat_open_input";
 
+	//TRACE(dump::info,FORMAT_STR("avformat_open_input in %1%",%url))
+
 	int hr;
     JCHKM(0 <= (hr = avformat_open_input(&_ctxFormat,url.c_str(),NULL,NULL)),
             rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
             %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
+
+	//TRACE(dump::info,FORMAT_STR("avformat_open_input out %1%",%url))
 
     _begin_method = get_local_time();
     _name_method = "avformat_find_stream_info";

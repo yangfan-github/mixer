@@ -1,6 +1,6 @@
 {
   "outputs": {
-    "./out/index.m3u8":["video/720p","audio/64k"]
+    "./out.mp4":["video/720p","audio/64k"]
   },
   "inputs":[
     {
