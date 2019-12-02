@@ -423,8 +423,8 @@ ret_type ffmpeg_source::open(const string& url)
             _is_live = true;
     }
 
-	_ctxFormat->interrupt_callback.callback = timeout_callback;
-    _ctxFormat->interrupt_callback.opaque = this;
+	//_ctxFormat->interrupt_callback.callback = timeout_callback;
+    //_ctxFormat->interrupt_callback.opaque = this;
 
     _begin_method = get_local_time();
     _name_method = "avformat_open_input";
