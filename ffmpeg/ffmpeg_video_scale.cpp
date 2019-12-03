@@ -72,6 +72,7 @@ ret_type ffmpeg_video_scale::process(input_pin* pin,frame_ptr frame)
 
     VideoMediaType format_in = mt_in->get_video_format();
     VideoMediaType format_out = mt_out->get_video_format();
+
     int width_in = mt_in->get_video_width();
     int width_out = mt_out->get_video_width();
     int height_in = mt_in->get_video_height();
