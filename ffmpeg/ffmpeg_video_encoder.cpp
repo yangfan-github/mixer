@@ -101,6 +101,8 @@ ret_type ffmpeg_video_encoder::open(media_type* mt)
 
     JCHK(media_type::MIN_VIDEO_WIDTH <= (_ctxCodec->width = mt->get_video_width()),rc_param_invalid);
     JCHK(media_type::MIN_VIDEO_HEIGHT <= (_ctxCodec->height = mt->get_video_height()),rc_param_invalid);
+    _ctxCodec->coded_width = _ctxCodec->width;
+    _ctxCodec->coded_height = _ctxCodec->height;
 
     int64_t duration = mt->get_video_duration();
     JCHK(0 < duration,rc_param_invalid)

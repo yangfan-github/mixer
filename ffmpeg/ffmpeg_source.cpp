@@ -49,12 +49,6 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
     }
     mt->set_sub((MediaSubType)stream->codec->codec_id);
     mt->set_global_header(true == _source->_is_global_header && 0 < stream->codec->extradata_size);
-    string name = _source->_ctxFormat->iformat->name;
-    if(name == "image2")
-    {
-        stream->codec->extradata = nullptr;
-        stream->codec->extradata_size = 0;
-    }
     JIF(mt->set_extra_data(stream->codec->extradata,stream->codec->extradata_size))
 
     if(AVMEDIA_TYPE_VIDEO == stream->codec->codec_type)

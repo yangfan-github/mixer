@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions
 RESINC = 
 LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -lavcodec -lavformat
+LDFLAGS =
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
