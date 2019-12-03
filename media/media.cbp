@@ -55,7 +55,7 @@
 			<Add option="-lboost_regex" />
 			<Add option="-lavformat" />
 			<Add option="-lavcodec" />
-			<Add directory="../third-party/ffSDK/lib" />
+			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="../inc/dump.h" />
 		<Unit filename="../inc/media.h" />

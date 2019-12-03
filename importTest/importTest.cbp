@@ -41,7 +41,8 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-rpath-link=&apos;../lib&apos;" />
+			<Add option="-lavformat" />
+			<Add option="-lavcodec" />
 			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="main.cpp" />

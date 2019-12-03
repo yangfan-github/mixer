@@ -19,7 +19,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-lmediad" />
-					<Add directory="../bin/debug" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="cp -f ../lib/libimportd.so /usr/local/lib/libimportd.so" />
@@ -39,7 +38,6 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lmedia" />
-					<Add directory="../bin/release" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="cp -f ../lib/libimport.so /usr/local/lib/libimport.so" />
@@ -53,9 +51,9 @@
 			<Add option="-fPIC" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-rpath-link=&apos;../lib&apos;" />
 			<Add option="-lboost_system" />
 			<Add option="-lboost_date_time" />
+			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="../inc/import.h" />
 		<Unit filename="main.cpp" />

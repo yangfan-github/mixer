@@ -16,11 +16,9 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-g" />
-					<Add directory="mixerEngine" />
 				</Compiler>
 				<Linker>
 					<Add option="-lmediad" />
-					<Add directory="../bin/debug" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="cp -f ../lib/libmixerEngined.so /usr/local/lib/libmixerEngined.so" />
@@ -36,12 +34,10 @@
 				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add directory="mixerEngine" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lmedia" />
-					<Add directory="../bin/release" />
 				</Linker>
 				<ExtraCommands>
 					<Add after="cp -f ../lib/libmixerEngine.so /usr/local/lib/libmixerEngine.so" />
@@ -53,13 +49,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option="-fPIC" />
-			<Add directory="../third-party/ffSDK/include" />
-			<Add directory="../third-party/ffSDK/src" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-rpath-link=&apos;../lib&apos;" />
 			<Add option="-lboost_system" />
 			<Add option="-lboost_date_time" />
+			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="../inc/dump.h" />
 		<Unit filename="../inc/mixerEngine.h" />
