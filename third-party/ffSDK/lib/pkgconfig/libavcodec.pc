@@ -1,0 +1,14 @@
+prefix=../ffSDK/
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 57.24.102
+Requires: 
+Requires.private: libswresample >= 2.0.101, libavutil >= 55.17.103
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -lva -lva-x11 -lva -lxcb -lxcb-shm -lxcb -lxcb-xfixes -lxcb-render -lxcb-shape -lxcb -lxcb-shape -lxcb -lX11 -lsndio -lasound -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/x265SDK/lib -lx265 -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/x264SDK/lib -lx264 -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/vpxSDK/lib -lvpx -lm -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/vpxSDK/lib -lvpx -lm -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/vpxSDK/lib -lvpx -lm -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/vpxSDK/lib -lvpx -lm -ltwolame -ltwolame -lmp3lame -L/home/centos/bitstreamfilter/3rdParty/sourceCode/ffmpeg/freetypeSDK/lib -lfreetype -lm -lbz2 -lz -pthread
+Cflags: -I${includedir}
