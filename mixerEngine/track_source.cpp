@@ -43,7 +43,7 @@ ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
     {
         if(!frame || frame->_info.dts >= _task->_time)
         {
-            TRACE(dump::info,"start engine mix")
+            //TRACE(dump::info,"start engine mix")
             g_pool.post(_task);
             _task = nullptr;
         }
