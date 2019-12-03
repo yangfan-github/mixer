@@ -146,7 +146,7 @@ ret_type mixer_engine::process()
         bool eof = true;
         for(RenderIt it = _renders.begin() ; it != _renders.end() ; ++it)
         {
-            if((*it)->is_eof())
+            if(!(*it)->is_eof())
             {
                 eof = false;
                 break;
