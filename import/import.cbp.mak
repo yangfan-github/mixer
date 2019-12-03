@@ -14,7 +14,7 @@ WINDRES = windres
 INC = 
 CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
-LIBDIR = -L../bin/lib
+LIBDIR = 
 LIB = 
 LDFLAGS = -lboost_system -lboost_date_time -lmedia
 
@@ -22,23 +22,23 @@ INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
 RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
-LIBDIR_DEBUG = $(LIBDIR)
+LIBDIR_DEBUG = $(LIBDIR) -L../bin/debug/lib
 LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/import
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/lib/libimport.so
+OUT_DEBUG = ../bin/debug/lib/libimport.so
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
-LIBDIR_RELEASE = $(LIBDIR)
+LIBDIR_RELEASE = $(LIBDIR) -L../bin/release/lib
 LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/import
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/lib/libimport.so
+OUT_RELEASE = ../bin/release/lib/libimport.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/stream_import.o
 
@@ -49,7 +49,7 @@ all: debug release
 clean: clean_debug clean_release
 
 before_debug: 
-	test -d ../bin/lib || mkdir -p ../bin/lib
+	test -d ../bin/debug/lib || mkdir -p ../bin/debug/lib
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
@@ -67,11 +67,11 @@ $(OBJDIR_DEBUG)/stream_import.o: stream_import.cpp
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ../bin/lib
+	rm -rf ../bin/debug/lib
 	rm -rf $(OBJDIR_DEBUG)
 
 before_release: 
-	test -d ../bin/lib || mkdir -p ../bin/lib
+	test -d ../bin/release/lib || mkdir -p ../bin/release/lib
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
@@ -89,7 +89,7 @@ $(OBJDIR_RELEASE)/stream_import.o: stream_import.cpp
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ../bin/lib
+	rm -rf ../bin/release/lib
 	rm -rf $(OBJDIR_RELEASE)
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release

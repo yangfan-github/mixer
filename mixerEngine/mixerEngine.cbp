@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../bin/lib/mixerEngine" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/mixerEngined" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Debug/mixerEngine" />
 				<Option type="3" />
@@ -18,9 +18,16 @@
 					<Add option="-g" />
 					<Add directory="mixerEngine" />
 				</Compiler>
+				<Linker>
+					<Add option="-lmediad" />
+					<Add directory="../bin/debug" />
+				</Linker>
+				<ExtraCommands>
+					<Add after="cp -f ../lib/libmixerEngined.so /usr/local/lib/libmixerEngined.so" />
+				</ExtraCommands>
 			</Target>
 			<Target title="Release">
-				<Option output="../bin/lib/mixerEngine" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/mixerEngine" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Release/mixerEngine" />
 				<Option type="3" />
@@ -33,7 +40,12 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-lmedia" />
+					<Add directory="../bin/release" />
 				</Linker>
+				<ExtraCommands>
+					<Add after="cp -f ../lib/libmixerEngine.so /usr/local/lib/libmixerEngine.so" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
@@ -45,10 +57,9 @@
 			<Add directory="../third-party/ffSDK/src" />
 		</Compiler>
 		<Linker>
+			<Add option="-Wl,-rpath-link=&apos;../lib&apos;" />
 			<Add option="-lboost_system" />
 			<Add option="-lboost_date_time" />
-			<Add option="-lmedia" />
-			<Add directory="../bin/lib" />
 		</Linker>
 		<Unit filename="../inc/dump.h" />
 		<Unit filename="../inc/mixerEngine.h" />
