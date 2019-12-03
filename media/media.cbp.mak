@@ -14,9 +14,9 @@ WINDRES = windres
 INC = -I../third-party/ffSDK/include -I../third-party/ffSDK/src
 CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
-LIBDIR = -L../third-party/ffSDK/lib
+LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -ldl -lboost_system -lboost_date_time -lboost_filesystem -lboost_regex -lavformat
+LDFLAGS = -lboost_system -lboost_date_time -lboost_filesystem -lboost_regex -lavformat -lavcodec
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
@@ -27,7 +27,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/media
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/debug/lib/libmedia.so
+OUT_DEBUG = ../lib/libmediad.so
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -38,7 +38,7 @@ LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/media
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/release/lib/libmedia.so
+OUT_RELEASE = ../lib/libmedia.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/dump.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/media_filter.o $(OBJDIR_DEBUG)/media_frame.o $(OBJDIR_DEBUG)/media_thread_pool.o $(OBJDIR_DEBUG)/media_type.o
 
@@ -49,10 +49,11 @@ all: debug release
 clean: clean_debug clean_release
 
 before_debug: 
-	test -d ../bin/debug/lib || mkdir -p ../bin/debug/lib
+	test -d ../lib || mkdir -p ../lib
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
+	cp -f ../lib/libmediad.so /usr/local/lib/libmediad.so
 
 debug: before_debug out_debug after_debug
 
@@ -79,14 +80,15 @@ $(OBJDIR_DEBUG)/media_type.o: media_type.cpp
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ../bin/debug/lib
+	rm -rf ../lib
 	rm -rf $(OBJDIR_DEBUG)
 
 before_release: 
-	test -d ../bin/release/lib || mkdir -p ../bin/release/lib
+	test -d ../lib || mkdir -p ../lib
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
+	cp -f ../lib/libmedia.so /usr/local/lib/libmedia.so
 
 release: before_release out_release after_release
 
@@ -113,7 +115,7 @@ $(OBJDIR_RELEASE)/media_type.o: media_type.cpp
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ../bin/release/lib
+	rm -rf ../lib
 	rm -rf $(OBJDIR_RELEASE)
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release

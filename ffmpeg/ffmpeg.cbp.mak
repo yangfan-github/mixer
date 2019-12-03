@@ -14,31 +14,31 @@ WINDRES = windres
 INC = -I../third-party/ffSDK/include -I../third-party/ffSDK/src
 CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
-LIBDIR = 
+LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -lpthread -lavcodec -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lboost_system -lboost_filesystem -lboost_date_time -lmedia
+LDFLAGS = -lpthread -lavcodec -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale -lboost_system -lboost_filesystem -lboost_date_time
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
 RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
-LIBDIR_DEBUG = $(LIBDIR) -L../bin/debug/lib
+LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
-LDFLAGS_DEBUG = $(LDFLAGS)
+LDFLAGS_DEBUG = $(LDFLAGS) -lmediad
 OBJDIR_DEBUG = ../obj/Debug/ffmpeg
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/debug/libffmpeg.so
+OUT_DEBUG = ../bin/libffmpegd.so
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
-LIBDIR_RELEASE = $(LIBDIR) -L../bin/release/lib
+LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s
+LDFLAGS_RELEASE = $(LDFLAGS) -s -lmedia
 OBJDIR_RELEASE = ../obj/Release/ffmpeg
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/release/libffmpeg.so
+OUT_RELEASE = ../bin/libffmpeg.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/ffmpeg_video_scale.o $(OBJDIR_DEBUG)/ffmpeg_video_encoder.o $(OBJDIR_DEBUG)/ffmpeg_video_decoder.o $(OBJDIR_DEBUG)/ffmpeg_source.o $(OBJDIR_DEBUG)/ffmpeg_render.o $(OBJDIR_DEBUG)/ffmpeg_audio_resample.o $(OBJDIR_DEBUG)/ffmpeg_audio_encoder.o $(OBJDIR_DEBUG)/ffmpeg_audio_decoder.o
 
@@ -49,7 +49,7 @@ all: debug release
 clean: clean_debug clean_release
 
 before_debug: 
-	test -d ../bin/debug || mkdir -p ../bin/debug
+	test -d ../bin || mkdir -p ../bin
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
@@ -88,11 +88,11 @@ $(OBJDIR_DEBUG)/ffmpeg_audio_decoder.o: ffmpeg_audio_decoder.cpp
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ../bin/debug
+	rm -rf ../bin
 	rm -rf $(OBJDIR_DEBUG)
 
 before_release: 
-	test -d ../bin/release || mkdir -p ../bin/release
+	test -d ../bin || mkdir -p ../bin
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
@@ -131,7 +131,7 @@ $(OBJDIR_RELEASE)/ffmpeg_audio_decoder.o: ffmpeg_audio_decoder.cpp
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ../bin/release
+	rm -rf ../bin
 	rm -rf $(OBJDIR_RELEASE)
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release

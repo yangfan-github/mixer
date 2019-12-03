@@ -11,34 +11,34 @@ AR = ar
 LD = g++
 WINDRES = windres
 
-INC = -I../third-party/ffSDK/include -I../third-party/ffSDK/src
+INC = 
 CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
-LIBDIR = 
+LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -lboost_system -lboost_date_time -lmedia
+LDFLAGS = -lboost_system -lboost_date_time
 
-INC_DEBUG = $(INC) -ImixerEngine
+INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
 RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
-LIBDIR_DEBUG = $(LIBDIR) -L../bin/debug/lib
+LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
-LDFLAGS_DEBUG = $(LDFLAGS)
+LDFLAGS_DEBUG = $(LDFLAGS) -lmediad
 OBJDIR_DEBUG = ../obj/Debug/mixerEngine
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/debug/lib/libmixerEngine.so
+OUT_DEBUG = ../lib/libmixerEngined.so
 
-INC_RELEASE = $(INC) -ImixerEngine
+INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
-LIBDIR_RELEASE = $(LIBDIR) -L../bin/release/lib
+LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s
+LDFLAGS_RELEASE = $(LDFLAGS) -s -lmedia
 OBJDIR_RELEASE = ../obj/Release/mixerEngine
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/release/lib/libmixerEngine.so
+OUT_RELEASE = ../lib/libmixerEngine.so
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/engine_source.o $(OBJDIR_DEBUG)/engine_tracker.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/mixer_engine.o $(OBJDIR_DEBUG)/track_source.o
 
@@ -49,10 +49,11 @@ all: debug release
 clean: clean_debug clean_release
 
 before_debug: 
-	test -d ../bin/debug/lib || mkdir -p ../bin/debug/lib
+	test -d ../lib || mkdir -p ../lib
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
+	cp -f ../lib/libmixerEngined.so /usr/local/lib/libmixerEngined.so
 
 debug: before_debug out_debug after_debug
 
@@ -76,14 +77,15 @@ $(OBJDIR_DEBUG)/track_source.o: track_source.cpp
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ../bin/debug/lib
+	rm -rf ../lib
 	rm -rf $(OBJDIR_DEBUG)
 
 before_release: 
-	test -d ../bin/release/lib || mkdir -p ../bin/release/lib
+	test -d ../lib || mkdir -p ../lib
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
+	cp -f ../lib/libmixerEngine.so /usr/local/lib/libmixerEngine.so
 
 release: before_release out_release after_release
 
@@ -107,7 +109,7 @@ $(OBJDIR_RELEASE)/track_source.o: track_source.cpp
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ../bin/release/lib
+	rm -rf ../lib
 	rm -rf $(OBJDIR_RELEASE)
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release

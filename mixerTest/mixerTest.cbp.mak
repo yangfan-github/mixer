@@ -14,31 +14,31 @@ WINDRES = windres
 INC = 
 CFLAGS = -std=c++11 -Wall -fexceptions
 RESINC = 
-LIBDIR = 
+LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -lmixerEngine
+LDFLAGS = -lavcodec -lavformat
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
 RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
-LIBDIR_DEBUG = $(LIBDIR) -L../bin/debug/lib
+LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
-LDFLAGS_DEBUG = $(LDFLAGS) -Wl,--rpath=../bin/debug/lib/
+LDFLAGS_DEBUG = $(LDFLAGS) -lmixerEngined
 OBJDIR_DEBUG = ../obj/Debug/mixerTest
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/debug/mixerTest
+OUT_DEBUG = ../bin/mixerTestd
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
-LIBDIR_RELEASE = $(LIBDIR) -L../bin/release/lib
+LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s -Wl,--rpath=../bin/release/lib/
+LDFLAGS_RELEASE = $(LDFLAGS) -s -lmixerEngine
 OBJDIR_RELEASE = ../obj/Release/mixerTest
 DEP_RELEASE = 
-OUT_RELEASE = ../bin/release/mixerTest
+OUT_RELEASE = ../bin/mixerTest
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/main.o
 
@@ -49,7 +49,7 @@ all: debug release
 clean: clean_debug clean_release
 
 before_debug: 
-	test -d ../bin/debug || mkdir -p ../bin/debug
+	test -d ../bin || mkdir -p ../bin
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
@@ -64,11 +64,11 @@ $(OBJDIR_DEBUG)/main.o: main.cpp
 
 clean_debug: 
 	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ../bin/debug
+	rm -rf ../bin
 	rm -rf $(OBJDIR_DEBUG)
 
 before_release: 
-	test -d ../bin/release || mkdir -p ../bin/release
+	test -d ../bin || mkdir -p ../bin
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
@@ -83,7 +83,7 @@ $(OBJDIR_RELEASE)/main.o: main.cpp
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ../bin/release
+	rm -rf ../bin
 	rm -rf $(OBJDIR_RELEASE)
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release
