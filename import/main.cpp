@@ -25,3 +25,5 @@ bool import_stop(void* handle)
     delete si;
     return true;
 }
+
+media_thread_pool g_pool;

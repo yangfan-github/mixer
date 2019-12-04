@@ -36,6 +36,4 @@ class media_thread_pool
         ret_type process(media_task* task);
 };
 
-extern media_thread_pool g_pool;
-
 #endif // MEDIA_THREAD_POOL_H

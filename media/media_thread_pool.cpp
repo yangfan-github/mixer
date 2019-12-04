@@ -100,5 +100,3 @@ ret_type media_thread_pool::process(media_task* task)
         post(task);
     return rt;
 }
-
-media_thread_pool g_pool;

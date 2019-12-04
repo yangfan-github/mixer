@@ -12,6 +12,6 @@
 #include <boost/foreach.hpp>
 
 using namespace boost;
-
+extern media_thread_pool g_pool;
 
 #endif // STDAFX_H_INCLUDED

@@ -25,8 +25,8 @@ ret_type mixer_engine::load(const char* template_file)
         {
             _source.reset(new engine_source(this));
             JCHK(_source,rc_new_fail)
+            return _source->load(pt_soucre);
         }
-        return _source->load(pt_soucre);
     }
     catch (boost::property_tree::json_parser::json_parser_error& e)
     {
@@ -44,6 +44,7 @@ ret_type mixer_engine::load(const char* template_file)
     {
         JCHKM(false,rc_param_invalid,FORMAT_STR("load template file:[%1%] fial",%template_file))
     }
+    return rc_ok;
 }
 
 ret_type mixer_engine::run(const char* task_file)

@@ -418,7 +418,7 @@ ret_type ffmpeg_source::open(const string& url)
     _is_live = false;
 
     std::vector<std::string> values;
-    if(parse_url(url,values))
+    if(parse_url(url,values) && !values.empty())
     {
         string protocol = values[us_protocol];
         transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);

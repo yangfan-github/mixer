@@ -454,7 +454,7 @@ ret_type ffmpeg_render::open()
     const char* format = nullptr;
 
     std::vector<std::string> values;
-    if(parse_url(_url,values))
+    if(parse_url(_url,values) && !values.empty())
     {
         string protocol = values[us_protocol];
         transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);

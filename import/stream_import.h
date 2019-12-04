@@ -20,4 +20,6 @@ class stream_import : public media_task
         ret_type process();
 };
 
+extern media_thread_pool g_pool;
+
 #endif // STREAM_IMPORT_H
