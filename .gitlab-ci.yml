@@ -34,6 +34,7 @@ mixer-build:
     - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/
     - cp -a inc lib ${ffmpeg}/target/
     - cp -f lib/* /usr/local/lib/
+    - cp -a bin ${ffmpeg}/target/
     - ldconfig
     - cd bin
     - ./mixerTest ./template.json ./task.json
