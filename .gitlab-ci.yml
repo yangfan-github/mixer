@@ -32,6 +32,8 @@ mixer-build:
     - ulimit -c unlimited
     - make
     - mv bin/plugins/libffmpeg.so lib ${ffmpeg}/target/
+    - cp -f lib/* /usr/local/lib/
+    - ldconfig
     - cp -a inc ${ffmpeg}/target/
     - cd bin
     - ./mixerTest ./template.json ./task.json
