@@ -48,7 +48,7 @@ media_thread_pool::media_thread_pool(size_t count_thread)
     if(0 == count_thread)
     {
         int enableCPUNum_ = sysconf(_SC_NPROCESSORS_ONLN);
-        count_thread = (size_t)enableCPUNum_ * 2 + 1;
+        count_thread = (size_t)enableCPUNum_ * 2 - 1;
         TRACE(dump::info,FORMAT_STR("get system enable cpu count:%1% thread count:%2%",%enableCPUNum_%count_thread))
     }
 
