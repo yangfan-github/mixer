@@ -10,7 +10,7 @@ my English is poor so 下面全是中文
  apt-get  install libavcodec57 libavformat57 libavutil55 libswresample2 libswscale4  libpostproc54  libavfilter6 
     libavcodec-dev libavformat-dev  libavutil-dev  libswresample-dev  libswscale-dev libavfilter-dev libpostproc-dev -y  
 ```  
-3.make    编译并自动输出到系统目录     
+3.make ver=debug 编译debug版本（也可以 release）并自动安装       
 
 源码目录结构   
 ./media/                      //多媒体框架项目   
@@ -23,19 +23,13 @@ my English is poor so 下面全是中文
 
 lib输出 make自动拷贝到系统目录（/usr/local/lib）    
 ./lib/libmedia.so             
-./lib/libmediad.so            
 ./lib/libmixerEngine.so       
-./lib/libmixerEngined.so      
 ./lib/libimport.so            
-./lib/libimportd.so           
 
 bin目录结构  
 ./bin/plugins/libffmpeg.so    //ffmpeg插件  
-./bin/plugins/libffmpegd.so   //ffmpeg插件Debug版本  
 ./bin/mixerTest               //混合转码测试程序  
-./bin/mixerTestd              //混合转码测试程序Debug版本   
 ./bin/importTest              //转推测试程序  
-./bin/importTestd             //转推测试程序Debug版本   
 ./bin/tempalte.json           //转码转码模板   
 ./bin/template/               //转码转码模板资源目录    
 ./bin/task.json               //转码任务    
@@ -50,4 +44,4 @@ cd ./bin
 1. 依赖boost的编译结果，同样放在系统目录。
 2. 依赖安装的包:  
     libavcodec57 libavformat57 libavutil55 libswresample2 libswscale4  libpostproc54  libavfilter6
-1. 依赖mixer的所有输出。其文件系统布局详见编译过程。    
+3. 依赖mixer的所有输出。其文件系统布局详见编译过程。    
