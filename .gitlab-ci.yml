@@ -33,6 +33,6 @@ mixer-build:
     - make
     - mv bin/plugins/libffmpeg.so lib ${ffmpeg}/target/
     - cp -a inc ${ffmpeg}/target/
-    - ls -R bin
     - cd bin
     - ./mixerTest ./template.json ./task.json
+    - ls -R ${ffmpeg}/target/
