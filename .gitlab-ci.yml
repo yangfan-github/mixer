@@ -35,4 +35,4 @@ mixer-build:
     - cp -a inc ${ffmpeg}/target/
     - ls -R bin
     - cd bin
-    - ./mixerTestd ./template.json ./task.json
+    - ./mixerTest ./template.json ./task.json
