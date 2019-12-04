@@ -26,9 +26,9 @@ mixer-build:
   retry: 2
   script:
     - pwd
-    - rm -rf ${BUILDDIR}/target/*
+    - mkdir -p ${BUILDDIR}/ffmpeg/target/ bin/plugins
+    - rm -rf ${BUILDDIR}/ffmpeg/target/*
     - ulimit -c unlimited
-    - mkdir ./bin/plugins
     - make
     - mv bin/plugins/libffmpeg.so lib ${BUILDDIR}/target/
     - cd bin
