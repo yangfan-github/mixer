@@ -3,9 +3,13 @@ my English is poor so 下面全是中文
 基于同一个多媒体框架的两个应用项目，分别是混合转码项目和RTMP转推项目，采用了分层开发，   
 整个工程基于boost，ffmpeg ，只有一处获取CPU核数采用了系统API，理论上可跨平台。    
    
-编译  
+# 编译  
 1.编译boost 1.7 或以上版本      输出到系统目录   
-2.编译ffmpeg ./thrd-party/ffSDK  输出到系统目录  
+2.安装ffmpeg,以ubuntu:18.04 为例（其它系统对应变通） 
+```  
+ apt-get  install libavcodec57 libavformat57 libavutil55 libswresample2 libswscale4  libpostproc54  libavfilter6 
+    libavcodec-dev libavformat-dev  libavutil-dev  libswresample-dev  libswscale-dev libavfilter-dev libpostproc-dev -y  
+```  
 3.make ver=debug 编译debug版本（也可以 release）并自动安装       
 
 源码目录结构   
@@ -35,3 +39,9 @@ bin目录结构
 cd ./bin   
 ./mixerTestd ./template.json ./task.json    //转码测试，输出./out.mp4    
 ./importTestd [rtmp pull url] [rtmp push url] //转推测试     
+
+# 运行时环境
+1. 依赖boost的编译结果，同样放在系统目录。
+2. 依赖安装的包:  
+    libavcodec57 libavformat57 libavutil55 libswresample2 libswscale4  libpostproc54  libavfilter6
+3. 依赖mixer的所有输出。其文件系统布局详见编译过程。    
