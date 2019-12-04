@@ -31,10 +31,10 @@ mixer-build:
     - rm -rf ${ffmpeg}/target/*
     - ulimit -c unlimited
     - make
-    - mv bin/plugins/libffmpeg.so lib ${ffmpeg}/target/
+    - mv bin/plugins/libffmpeg.so ${ffmpeg}/target/
+    - cp -a inc lib ${ffmpeg}/target/
     - cp -f lib/* /usr/local/lib/
     - ldconfig
-    - cp -a inc ${ffmpeg}/target/
     - cd bin
     - ./mixerTest ./template.json ./task.json
     - ls -R ${ffmpeg}/target/
