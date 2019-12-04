@@ -19,7 +19,7 @@ variables:
   
 mixer-build:
   tags:
-    - lvs12-mixer-shell
+    - lvs12-mixer-docker
   stage: build
   only:
     - develop
@@ -27,4 +27,9 @@ mixer-build:
   script:
     - pwd
     - rm -rf ${BUILDDIR}/target/*
-    - docker run --rm -v ${BUILDDIR}/ffmpeg:/data -v $(pwd):/src harbor.offcncloud.com/offcn_llive/debian:buster-boost-build /bin/bash /data/updateFFmpeg.sh
+    - ulimit -c unlimited
+    - mkdir ./bin/plugins
+    - make
+    - mv bin/plugins/libffmpeg.so lib ${BUILDDIR}/target/
+    - cd bin
+    - ./mixerTestd ./template.json ./task.json
