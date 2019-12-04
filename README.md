@@ -11,7 +11,7 @@ my English is poor so 下面全是中文
 源码目录结构   
 ./media/                      //多媒体框架项目   
 ./mixerEngine/                //混合转码项目   
-./import/                     //转推项目 
+./import/                     //转推项目   
 ./ffmpeg/                     //ffmpeg插件项目  
 ./mixerTest/                  //混合转码测试项目  
 ./importTest/                 //转推测试项目  
