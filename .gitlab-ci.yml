@@ -23,7 +23,7 @@ mixer-build:
   stage: build
   only:
     - develop
-  retry: 2
+  retry: 1
   script:
     - pwd
     - ffmpeg=${BUILDDIR}/ffmpeg
