@@ -22,7 +22,7 @@ int main(int argc,char *argv[])
     if(!handle)
         return -1;
 
-    if(!mixer_run(handle,str_task.c_str()))
+    if(0 == mixer_run(handle,str_task.c_str()))
         return -1;
 
     mixer_wait(handle);

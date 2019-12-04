@@ -25,20 +25,20 @@ void* mixer_create(const char* str_template)
     return engine;
 }
 
-bool  mixer_run(void* handle,const char* str_task)
+int mixer_run(void* handle,const char* str_task)
 {
     JCHKR(nullptr != handle,rc_param_invalid,false)
 
     mixer_engine* engine = (mixer_engine*)handle;
 
-    return IS_OK(engine->run(str_task));
+    return IS_OK(engine->run(str_task)) ? 1 : 0;
 }
 
-bool  mixer_wait(void* handle,int ms_wait)
+int  mixer_wait(void* handle,int ms_wait)
 {
     JCHKR(nullptr != handle,rc_param_invalid,false)
     mixer_engine* engine = (mixer_engine*)handle;
-    return engine->wait(ms_wait);
+    return engine->wait(ms_wait) ? 1 : 0;
 }
 
 void  mixer_delete(void* handle)
