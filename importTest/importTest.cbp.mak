@@ -16,7 +16,7 @@ CFLAGS = -std=c++11 -Wall -fexceptions
 RESINC = 
 LIBDIR = -L../lib
 LIB = 
-LDFLAGS =
+LDFLAGS = -limport
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g
@@ -24,10 +24,10 @@ RESINC_DEBUG = $(RESINC)
 RCFLAGS_DEBUG = $(RCFLAGS)
 LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
-LDFLAGS_DEBUG = $(LDFLAGS) -limportd
+LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/importTest
 DEP_DEBUG = 
-OUT_DEBUG = ../bin/importTestd
+OUT_DEBUG = ../bin/importTest
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -35,7 +35,7 @@ RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
 LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s -limport
+LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../obj/Release/importTest
 DEP_RELEASE = 
 OUT_RELEASE = ../bin/importTest

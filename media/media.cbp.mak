@@ -14,7 +14,7 @@ WINDRES = windres
 INC = -I../third-party/ffSDK/include -I../third-party/ffSDK/src
 CFLAGS = -std=c++11 -Wall -fexceptions -fPIC
 RESINC = 
-LIBDIR = -L../lib
+LIBDIR = 
 LIB = 
 LDFLAGS = -lboost_system -lboost_date_time -lboost_filesystem -lboost_regex -lavformat -lavcodec
 
@@ -27,7 +27,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../obj/Debug/media
 DEP_DEBUG = 
-OUT_DEBUG = ../lib/libmediad.so
+OUT_DEBUG = ../lib/libmedia.so
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
@@ -44,18 +44,24 @@ OBJ_DEBUG = $(OBJDIR_DEBUG)/dump.o $(OBJDIR_DEBUG)/main.o $(OBJDIR_DEBUG)/media_
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/dump.o $(OBJDIR_RELEASE)/main.o $(OBJDIR_RELEASE)/media_filter.o $(OBJDIR_RELEASE)/media_frame.o $(OBJDIR_RELEASE)/media_thread_pool.o $(OBJDIR_RELEASE)/media_type.o
 
-all: debug release
+all: before_build build_debug build_release after_build
 
 clean: clean_debug clean_release
+
+before_build: 
+
+after_build: 
+	cp -f ../lib/libmedia.so /usr/local/lib/libmedia.so
 
 before_debug: 
 	test -d ../lib || mkdir -p ../lib
 	test -d $(OBJDIR_DEBUG) || mkdir -p $(OBJDIR_DEBUG)
 
 after_debug: 
-	cp -f ../lib/libmediad.so /usr/local/lib/libmediad.so
 
-debug: before_debug out_debug after_debug
+build_debug: before_debug out_debug after_debug
+
+debug: before_build build_debug after_build
 
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
 	$(LD) -shared $(LIBDIR_DEBUG) $(OBJ_DEBUG)  -o $(OUT_DEBUG) $(LDFLAGS_DEBUG) $(LIB_DEBUG)
@@ -88,9 +94,10 @@ before_release:
 	test -d $(OBJDIR_RELEASE) || mkdir -p $(OBJDIR_RELEASE)
 
 after_release: 
-	cp -f ../lib/libmedia.so /usr/local/lib/libmedia.so
 
-release: before_release out_release after_release
+build_release: before_release out_release after_release
+
+release: before_build build_release after_build
 
 out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
 	$(LD) -shared $(LIBDIR_RELEASE) $(OBJ_RELEASE)  -o $(OUT_RELEASE) $(LDFLAGS_RELEASE) $(LIB_RELEASE)
@@ -118,5 +125,5 @@ clean_release:
 	rm -rf ../lib
 	rm -rf $(OBJDIR_RELEASE)
 
-.PHONY: before_debug after_debug clean_debug before_release after_release clean_release
+.PHONY: before_build after_build before_debug after_debug clean_debug before_release after_release clean_release
 
