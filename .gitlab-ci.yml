@@ -26,10 +26,12 @@ mixer-build:
   retry: 2
   script:
     - pwd
-    - mkdir -p ${BUILDDIR}/ffmpeg/target/ bin/plugins
-    - rm -rf ${BUILDDIR}/ffmpeg/target/*
+    - ffmpeg=${BUILDDIR}/ffmpeg
+    - mkdir -p ${ffmpeg}/target/ bin/plugins
+    - rm -rf ${ffmpeg}/target/*
     - ulimit -c unlimited
     - make
-    - mv bin/plugins/libffmpeg.so lib ${BUILDDIR}/target/
+    - mv bin/plugins/libffmpeg.so lib ${ffmpeg}/target/
+    - cp -a inc ${ffmpeg}/target/
     - cd bin
     - ./mixerTestd ./template.json ./task.json
