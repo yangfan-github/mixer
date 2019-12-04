@@ -14,9 +14,9 @@ WINDRES = windres
 INC = 
 CFLAGS = -std=c++11 -Wall -fexceptions
 RESINC = 
-LIBDIR = -L../bin/lib
+LIBDIR = -L../lib
 LIB = 
-LDFLAGS = -Wl,--rpath=../bin/lib/ -lmixerEngine
+LDFLAGS = -lmixerEngine
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g

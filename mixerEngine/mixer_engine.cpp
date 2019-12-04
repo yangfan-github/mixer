@@ -25,8 +25,8 @@ ret_type mixer_engine::load(const char* template_file)
         {
             _source.reset(new engine_source(this));
             JCHK(_source,rc_new_fail)
+            return _source->load(pt_soucre);
         }
-        return _source->load(pt_soucre);
     }
     catch (boost::property_tree::json_parser::json_parser_error& e)
     {
@@ -44,6 +44,7 @@ ret_type mixer_engine::load(const char* template_file)
     {
         JCHKM(false,rc_param_invalid,FORMAT_STR("load template file:[%1%] fial",%template_file))
     }
+    return rc_ok;
 }
 
 ret_type mixer_engine::run(const char* task_file)
@@ -146,7 +147,7 @@ ret_type mixer_engine::process()
         bool eof = true;
         for(RenderIt it = _renders.begin() ; it != _renders.end() ; ++it)
         {
-            if((*it)->is_eof())
+            if(!(*it)->is_eof())
             {
                 eof = false;
                 break;
@@ -169,41 +170,4 @@ ret_type mixer_engine::process()
         TRACE(dump::info,FORMAT_STR("mix engine time line:%1%ms",%(_time/10000)))
     }
     return rt;
-}
-
-void* mixer_create(const char* str_template)
-{
-    JCHKR(nullptr != str_template,rc_param_invalid,nullptr)
-
-    mixer_engine* engine = new mixer_engine();
-    JCHKR(nullptr != engine,rc_new_fail,nullptr);
-    if(IS_FAIL(engine->load(str_template)))
-    {
-        delete engine;
-        engine = nullptr;
-    }
-    return engine;
-}
-
-bool  mixer_run(void* handle,const char* str_task)
-{
-    JCHKR(nullptr != handle,rc_param_invalid,false)
-
-    mixer_engine* engine = (mixer_engine*)handle;
-
-    return IS_OK(engine->run(str_task));
-}
-
-bool  mixer_wait(void* handle,int ms_wait)
-{
-    JCHKR(nullptr != handle,rc_param_invalid,false)
-    mixer_engine* engine = (mixer_engine*)handle;
-    return engine->wait(ms_wait);
-}
-
-void  mixer_delete(void* handle)
-{
-    RCHK(nullptr != handle,rc_param_invalid)
-    mixer_engine* engine = (mixer_engine*)handle;
-    delete engine;
 }

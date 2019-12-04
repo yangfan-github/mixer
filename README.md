@@ -1,21 +1,37 @@
 # mixer
 my English is poor so 下面全是中文   
-这个项目是一个多路视音频混合转码项目，基于boost，ffmpeg，没有用到任何系统相关API，理论上可跨平台.  
-./bin/out.mp4       是转码输出样例视频  
-./bin/mixerTest     测试主程序  
-./bin/template.json 模版文件  
-./bin/task.json     任务文件  
-./bin/template/     模版资源文件夹  
-./bin/task/         任务输入文件  
-./ffmpeg/           ffmpeg插件项目目录  
-./media/            多媒体框架项目目录  
-./mixerEngine/      转码引擎项目目录  
-./mixerTester/      转码测试主程序项目目录  
+基于同一个多媒体框架的两个应用项目，分别是混合转码项目和RTMP转推项目，采用了分层开发，   
+整个工程基于boost，ffmpeg ，只有一处获取CPU核数采用了系统API，理论上可跨平台。    
+   
+编译  
+1.编译boost 1.7 或以上版本      输出到系统目录   
+2.编译ffmpeg ./thrd-party/ffSDK  输出到系统目录  
+3.make ver=debug 编译debug版本（也可以 release）并自动安装       
 
-依赖以及层次关系  
-mixerTester  
-mixerEngine  
-media  
-ffmpeg  
-     
-[demo mp4](https://github.com/yangfan-github/mixer/blob/develop/bin/out.mp4)
+源码目录结构   
+./media/                      //多媒体框架项目   
+./mixerEngine/                //混合转码项目   
+./import/                     //转推项目   
+./ffmpeg/                     //ffmpeg插件项目  
+./mixerTest/                  //混合转码测试项目  
+./importTest/                 //转推测试项目  
+./inc                         //头文件目录
+
+lib输出 make自动拷贝到系统目录（/usr/local/lib）    
+./lib/libmedia.so             
+./lib/libmixerEngine.so       
+./lib/libimport.so            
+
+bin目录结构  
+./bin/plugins/libffmpeg.so    //ffmpeg插件  
+./bin/mixerTest               //混合转码测试程序  
+./bin/importTest              //转推测试程序  
+./bin/tempalte.json           //转码转码模板   
+./bin/template/               //转码转码模板资源目录    
+./bin/task.json               //转码任务    
+./bin/task/                   //转码任务资源目录   
+
+测试程序   
+cd ./bin   
+./mixerTestd ./template.json ./task.json    //转码测试，输出./out.mp4    
+./importTestd [rtmp pull url] [rtmp push url] //转推测试     

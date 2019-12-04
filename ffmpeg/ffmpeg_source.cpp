@@ -361,8 +361,11 @@ ret_type ffmpeg_source::process()
     {
         JCHK(_ctxFormat,rc_state_invalid)
 
-        _begin_method = get_local_time();
-        _name_method = "av_read_frame";
+        if(_is_live)
+        {
+            _begin_method = get_local_time();
+            _name_method = "av_read_frame";
+        }
 
         AVPacket pkt;
         av_init_packet(&pkt);
@@ -415,28 +418,38 @@ ret_type ffmpeg_source::open(const string& url)
     _is_live = false;
 
     std::vector<std::string> values;
-    if(parse_url(url,values))
+    if(parse_url(url,values) && !values.empty())
     {
         string protocol = values[us_protocol];
         transform(protocol.begin(),protocol.end(),protocol.begin(),::tolower);
         if(protocol == "rtmp")
+        {
+            _ctxFormat->interrupt_callback.callback = timeout_callback;
+            _ctxFormat->interrupt_callback.opaque = this;
             _is_live = true;
+        }
     }
 
-	_ctxFormat->interrupt_callback.callback = timeout_callback;
-    _ctxFormat->interrupt_callback.opaque = this;
+    if(_is_live)
+    {
+        _begin_method = get_local_time();
+        _name_method = "avformat_open_input";
+    }
 
-    _begin_method = get_local_time();
-    _name_method = "avformat_open_input";
+	TRACE(dump::info,FORMAT_STR("avformat_open_input in %1%",%url))
 
 	int hr;
     JCHKM(0 <= (hr = avformat_open_input(&_ctxFormat,url.c_str(),NULL,NULL)),
             rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
             %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
 
-    _begin_method = get_local_time();
-    _name_method = "avformat_find_stream_info";
+	TRACE(dump::info,FORMAT_STR("avformat_open_input out %1%",%url))
 
+    if(_is_live)
+    {
+        _begin_method = get_local_time();
+        _name_method = "avformat_find_stream_info";
+    }
 	JCHKM(0 <= (hr = avformat_find_stream_info(_ctxFormat,NULL)),
         rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] find stream fail,message:%2%",
         %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
@@ -508,24 +521,21 @@ void ffmpeg_source::reset()
 int ffmpeg_source::timeout_callback(void *param)
 {
     ffmpeg_source* source = (ffmpeg_source*)param;
-    if(true == source->_is_live)
+    int64_t duration = get_local_time() - source->_begin_method;
+    if(source->_name_method == "av_read_frame")
     {
-        int64_t duration = get_local_time() - source->_begin_method;
-        if(source->_name_method == "av_read_frame")
+        if(10000000 < duration)
         {
-            if(10000000 < duration)
-            {
-                TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
-                return 1;
-            }
+            TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+            return 1;
         }
-        else
+    }
+    else
+    {
+        if(50000000 < duration)
         {
-            if(50000000 < duration)
-            {
-                TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
-                return 1;
-            }
+            TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+            return 1;
         }
     }
     return 0;

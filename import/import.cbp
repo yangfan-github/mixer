@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="../bin/lib/import" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/import" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Debug/import/" />
 				<Option type="3" />
@@ -19,7 +19,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="../bin/lib/import" prefix_auto="1" extension_auto="1" />
+				<Option output="../lib/import" prefix_auto="1" extension_auto="1" />
 				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Release/import/" />
 				<Option type="3" />
@@ -44,8 +44,11 @@
 			<Add option="-lboost_system" />
 			<Add option="-lboost_date_time" />
 			<Add option="-lmedia" />
-			<Add directory="../bin/lib" />
+			<Add directory="../lib" />
 		</Linker>
+		<ExtraCommands>
+			<Add after="cp -f ../lib/libimport.so /usr/local/lib/libimport.so" />
+		</ExtraCommands>
 		<Unit filename="../inc/import.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="stream_import.cpp" />

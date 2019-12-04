@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="../bin/mixerTest" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../bin" />
+				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Debug/mixerTest/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -19,7 +19,7 @@
 			</Target>
 			<Target title="Release">
 				<Option output="../bin/mixerTest" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="../bin" />
+				<Option working_dir="../bin/" />
 				<Option object_output="../obj/Release/mixerTest/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -37,9 +37,8 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,--rpath=../bin/lib/" />
 			<Add option="-lmixerEngine" />
-			<Add directory="../bin/lib" />
+			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Extensions>

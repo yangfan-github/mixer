@@ -139,6 +139,15 @@ void media_type::set_duration(int64_t duration)
 
 void media_type::set_video_format(VideoMediaType vmt)
 {
+    if(VMT_YUVJ420P == vmt)
+        vmt = VMT_YUV420P;
+    else if(VMT_YUVJ422P == vmt)
+        vmt = VMT_YUV422P;
+    else if(VMT_YUVJ444P == vmt)
+        vmt = VMT_YUV444P;
+    else if(VMT_YUVJ440P == vmt)
+        vmt = VMT_YUV440P;
+
     if(VMT_NONE < vmt && VMT_NB > vmt)
         _vmt = vmt;
     else

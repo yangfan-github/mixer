@@ -11,7 +11,41 @@
 #include "stdafx.h"
 #include "mixer_engine.h"
 
-extern "C"
+void* mixer_create(const char* str_template)
 {
+    JCHKR(nullptr != str_template,rc_param_invalid,nullptr)
+
+    mixer_engine* engine = new mixer_engine();
+    JCHKR(nullptr != engine,rc_new_fail,nullptr);
+    if(IS_FAIL(engine->load(str_template)))
+    {
+        delete engine;
+        engine = nullptr;
+    }
+    return engine;
 }
 
+bool  mixer_run(void* handle,const char* str_task)
+{
+    JCHKR(nullptr != handle,rc_param_invalid,false)
+
+    mixer_engine* engine = (mixer_engine*)handle;
+
+    return IS_OK(engine->run(str_task));
+}
+
+bool  mixer_wait(void* handle,int ms_wait)
+{
+    JCHKR(nullptr != handle,rc_param_invalid,false)
+    mixer_engine* engine = (mixer_engine*)handle;
+    return engine->wait(ms_wait);
+}
+
+void  mixer_delete(void* handle)
+{
+    RCHK(nullptr != handle,rc_param_invalid)
+    mixer_engine* engine = (mixer_engine*)handle;
+    delete engine;
+}
+
+media_thread_pool g_pool;

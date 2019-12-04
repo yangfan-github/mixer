@@ -37,9 +37,8 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,--rpath=../bin/lib/" />
 			<Add option="-limport" />
-			<Add directory="../bin/lib" />
+			<Add directory="../lib" />
 		</Linker>
 		<Unit filename="main.cpp" />
 		<Extensions>

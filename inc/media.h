@@ -102,12 +102,12 @@ void release_filter(media_filter* filter) \
 filter_ptr create_filter(const char* type,const char* info,media_type* mt_input,media_type* mt_output,const string& dir);
 
 template<typename T>
-std::shared_ptr<T> create_filter(const char* info = nullptr,media_ptr mt_input = media_ptr(),media_ptr mt_output = media_ptr(),const string& dir="./")
+std::shared_ptr<T> create_filter(const char* info = nullptr,media_ptr mt_input = media_ptr(),media_ptr mt_output = media_ptr(),const string& dir="./plugins")
 {
     return std::dynamic_pointer_cast<T>(create_filter(typeid(T).name(),info,mt_input.get(),mt_output.get(),dir));
 }
 
-ret_type connect(output_pin_ptr pin_out,input_pin_ptr pin_in,media_ptr mt_out = media_ptr(),media_ptr mt_in = media_ptr(),const string& dir = "./");
+ret_type connect(output_pin_ptr pin_out,input_pin_ptr pin_in,media_ptr mt_out = media_ptr(),media_ptr mt_in = media_ptr(),const string& dir = "./plugins");
 
 ret_type convert_frame_to_array(media_ptr mt,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
 
