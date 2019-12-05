@@ -18,12 +18,12 @@ void* import_start(const char* sour,const char* dest)
     return new stream_import(sour,dest);
 }
 
-bool import_stop(void* handle)
+int import_stop(void* handle)
 {
-    JCHKR(nullptr != handle,rc_param_invalid,false)
+    JCHKR(nullptr != handle,rc_param_invalid,0)
     stream_import* si = (stream_import*)handle;
     delete si;
-    return true;
+    return 1;
 }
 
 media_thread_pool g_pool;
