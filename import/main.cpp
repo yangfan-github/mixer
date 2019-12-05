@@ -9,6 +9,7 @@
 // Feel free to add more files in this project. They will be
 // included in the resulting library.
 
+#include "../inc/import.h"
 #include "stream_import.h"
 
 void* import_start(const char* sour,const char* dest)

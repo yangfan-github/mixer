@@ -25,7 +25,7 @@ int main(int argc,char *argv[])
     if(0 == mixer_run(handle,str_task.c_str()))
         return -1;
 
-    mixer_wait(handle);
+    mixer_wait(handle,-1);
 
     mixer_delete(handle);
 
