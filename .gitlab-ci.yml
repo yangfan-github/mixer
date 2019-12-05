@@ -27,14 +27,13 @@ mixer-build:
   script:
     - pwd
     - ffmpeg=${BUILDDIR}/ffmpeg
-    - mkdir -p ${ffmpeg}/target/ bin/plugins
+    - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - rm -rf ${ffmpeg}/target/*
     - ulimit -c unlimited
     - make
-    - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/
-    - cp -a inc lib ${ffmpeg}/target/
+    - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/plugins/
+    - cp -a inc lib bin ${ffmpeg}/target/
     - cp -f lib/* /usr/local/lib/
-    - cp -a bin ${ffmpeg}/target/
     - ldconfig
     - cd bin
     - ./mixerTest ./template.json ./task.json
