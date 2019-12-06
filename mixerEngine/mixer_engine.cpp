@@ -5,6 +5,7 @@ mixer_engine::mixer_engine()
 :_eof(false)
 {
     //ctor
+    g_dump.set_class("mixer_engine");
 }
 
 mixer_engine::~mixer_engine()
@@ -42,7 +43,7 @@ ret_type mixer_engine::load(const char* template_file)
     }
     catch(...)
     {
-        JCHKM(false,rc_param_invalid,FORMAT_STR("load template file:[%1%] fial",%template_file))
+        JCHKM(false,rc_param_invalid,FORMAT_STR("load template fail,file=%1%",%template_file))
     }
     return rc_ok;
 }
@@ -104,7 +105,7 @@ ret_type mixer_engine::run(const char* task_file)
     }
     catch(...)
     {
-        JCHKM(false,rc_param_invalid,FORMAT_STR("load task file:[%1%] fial",%task_file))
+        JCHKM(false,rc_param_invalid,FORMAT_STR("load task fail,file=%1%",%task_file))
     }
     _source->get_time_base();
     _time = MEDIA_FRAME_NONE_TIMESTAMP;
@@ -167,7 +168,7 @@ ret_type mixer_engine::process()
     else if(rt == rc_ok)
     {
         _time += _source->_duration;
-        TRACE(dump::info,FORMAT_STR("mix engine time line:%1%ms",%(_time/10000)))
+        //TRACE(dump::info,FORMAT_STR("time line:%1%ms",%(_time/10000)))
     }
     return rt;
 }

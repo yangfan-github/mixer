@@ -7,6 +7,7 @@ stream_import::stream_import(const char* sour,const char* dest)
 ,_exit(true)
 {
     //ctor
+    g_dump.set_class("stream_import");
     bool except = true;
     if(_exit.compare_exchange_weak(except,false))
     {

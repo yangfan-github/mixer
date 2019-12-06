@@ -4,6 +4,7 @@ ffmpeg_audio_encoder::ffmpeg_audio_encoder()
 :_ctxCodec(nullptr)
 {
     //ctor
+    g_dump.set_class("ffmpeg_audio_encoder");
 }
 
 ffmpeg_audio_encoder::~ffmpeg_audio_encoder()
@@ -66,7 +67,7 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
 {
     close();
     AVCodec* codec;
-    JCHKM(codec = avcodec_find_encoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("media[%1%] can not find encoder",%mt->get_sub_name()));
+    JCHKM(codec = avcodec_find_encoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("can not find encoder,sub=%1%",%mt->get_sub_name()));
     JCHK(_ctxCodec = avcodec_alloc_context3(codec),rc_fail)
 
     AudioMediaType amt = mt->get_audio_format();
@@ -110,7 +111,7 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
         while(0 != codec->channel_layouts[i] && _ctxCodec->channel_layout != codec->channel_layouts[i]){++i;}
         if(0 == codec->channel_layouts[i])
         {
-            TRACE(dump::warn,FORMAT_STR("audio encoder not support channel layout:%1% change to channel layout:%2%",
+            TRACE(dump::warn,FORMAT_STR("not support channel layout,old=%1%,new=%2%",
                 %_ctxCodec->channel_layout%codec->channel_layouts[0]))
             _ctxCodec->channel_layout = codec->channel_layouts[0];
             mt->set_audio_channel(av_get_channel_layout_nb_channels(_ctxCodec->channel_layout));
@@ -123,7 +124,7 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
         get_audio_sample_rate(codec->supported_samplerates,tmp);
         if(tmp != _ctxCodec->sample_rate)
         {
-            TRACE(dump::warn,FORMAT_STR("audio encoder not support sample rate:%1% change to sample rate:%2%",%_ctxCodec->sample_rate%tmp))
+            TRACE(dump::warn,FORMAT_STR("not support sample,old=%1%,new=%2%",%_ctxCodec->sample_rate%tmp))
             _ctxCodec->sample_rate = tmp;
             mt->set_audio_sample_rate(tmp);
         }
@@ -146,7 +147,7 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
     _ctxCodec->thread_count = 0;
     JCHKM(0 == (ret = avcodec_open2(_ctxCodec,codec,NULL)),rc_fail,
-            FORMAT_STR("Open media[%1%] encoder fail msg:%2%",
+            FORMAT_STR("avcodec_open2 fail,sub=%1%,message=%2%",
             %mt->get_sub_name()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
     property_tree::ptree pt = mt->get_codec_option();
@@ -202,7 +203,7 @@ ret_type ffmpeg_audio_encoder::process(input_pin* pin,frame_ptr frame)
         else if(0 > ret)
         {
             char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-            JCHKM(0 == ret,rc_fail,FORMAT_STR("ffmpeg encode frame[DTS:%1%] fail,msg:%2%",
+            JCHKM(0 == ret,rc_fail,FORMAT_STR("avcodec_encode_audio2 fail,DTS=%1%,message=%2%",
                 %frame->_info.dts%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
         }
 	}

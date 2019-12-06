@@ -14,7 +14,7 @@ ffmpeg_source::stream::stream(media_filter* filter)
 ,_adts(nullptr)
 ,_time_start(MEDIA_FRAME_NONE_TIMESTAMP)
 {
-
+    g_dump.set_class("ffmpeg_source::stream");
 }
 
 ffmpeg_source::stream::~stream()
@@ -56,8 +56,8 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
         mt->set_video_format((VideoMediaType)stream->codec->pix_fmt);
 
         JCHKM(0 < stream->codec->width && 0 < stream->codec->height,rc_param_invalid,
-            FORMAT_STR("url:%1% %2% stream-%3% width:%4%,height:%5% is not valid",
-                %_source->_ctxFormat->filename%mt->get_sub_name()
+            FORMAT_STR("stream is invalid,url=%1%,sub=%2%,stream_index=%3%,width=%4%,height=%5%",
+                %_source->_ctxFormat->filename%mt->get_sub_name()%stream->index
                 %stream->codec->width%stream->codec->height))
 
         mt->set_video_width(stream->codec->width);
@@ -177,7 +177,7 @@ ret_type ffmpeg_source::stream::process(AVPacket& pkt)
                 pkt.data,
                 pkt.size,
                 pkt.flags & AV_PKT_FLAG_KEY)),rc_fail,
-                FORMAT_STR("ffmpeg demux stream[%1%] frame[DTS:%2%] add header fail msg:%3%",
+                FORMAT_STR("av_bitstream_filter_filter fail,stream=%1%,DTS=%2%],message=%3%",
                     %_stream->index%pkt.dts%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
             JIF(convert_packet_to_frame(frame,pktOut,_stream->time_base))
@@ -300,6 +300,7 @@ ffmpeg_source::ffmpeg_source()
 ,_is_open(false)
 {
     //ctor
+    g_dump.set_class("ffmpeg_source");
 }
 
 ffmpeg_source::~ffmpeg_source()
@@ -376,16 +377,21 @@ ret_type ffmpeg_source::process()
             {
                 dynamic_cast<stream*>(_pins[pkt.stream_index].get())->process(pkt);
             }
+            TRACE(dump::debug,FORMAT_STR("av_read_frame,url=%1%,stream_index=%2%,PTS=%3%,DTS=%4%",
+                %_ctxFormat->filename%pkt.stream_index%pkt.pts%pkt.dts))
             av_packet_unref(&pkt);
         }
         else
         {
             if(AVERROR_EOF == ret || -5 == ret)
+            {
+				TRACE(dump::info,FORMAT_STR("end,url=%1%,ret=%2%",%_ctxFormat->filename%ret))
                 _eof = true;
+            }
             else
             {
 				char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-				TRACE(dump::warn,FORMAT_STR("url:[%s] demux fail,message:%s",
+				TRACE(dump::warn,FORMAT_STR("av_read_frame fail,url=%1%,message=%2%",
                     %_ctxFormat->filename%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
             }
         }
@@ -436,14 +442,13 @@ ret_type ffmpeg_source::open(const string& url)
         _name_method = "avformat_open_input";
     }
 
-	TRACE(dump::info,FORMAT_STR("avformat_open_input in %1%",%url))
+	//TRACE(dump::info,FORMAT_STR("avformat_open_input in %1%",%url))
 
 	int hr;
     JCHKM(0 <= (hr = avformat_open_input(&_ctxFormat,url.c_str(),NULL,NULL)),
-            rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] fail,message:%2%",
+            rc_fail,FORMAT_STR("avformat_open_input fail,url=%1%,message=%2%",
             %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
 
-	TRACE(dump::info,FORMAT_STR("avformat_open_input out %1%",%url))
 
     if(_is_live)
     {
@@ -451,11 +456,11 @@ ret_type ffmpeg_source::open(const string& url)
         _name_method = "avformat_find_stream_info";
     }
 	JCHKM(0 <= (hr = avformat_find_stream_info(_ctxFormat,NULL)),
-        rc_fail,FORMAT_STR("ffmpeg demuxer open url[%1%] find stream fail,message:%2%",
+        rc_fail,FORMAT_STR("avformat_find_stream_info fail,url=%1%,message=%2%",
         %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
 
 	JCHKM(0 < _ctxFormat->nb_streams,rc_fail,
-        FORMAT_STR("ffmpeg demuxer can't find stream in url[%1%]",%url));
+        FORMAT_STR("can't find stream,url=%1%",%url));
 
 	av_dump_format(_ctxFormat, 0, "", 0);
     if(0 == strcmp(_ctxFormat->iformat->name,"mov,mp4,m4a,3gp,3g2,mj2") ||
@@ -476,19 +481,24 @@ ret_type ffmpeg_source::open(const string& url)
         _pins[i] = strm;
     }
     reset();
+	TRACE(dump::info,FORMAT_STR("avformat_open_input,url=%1%",%_ctxFormat->filename))
     _is_open = true;
     return rt;
 }
 
 void ffmpeg_source::exit()
 {
+	TRACE(dump::info,FORMAT_STR("exit,url=%1%",%_ctxFormat->filename))
     _eof = true;
 }
 
 void ffmpeg_source::close()
 {
     if(nullptr != _ctxFormat)
+    {
+        TRACE(dump::info,FORMAT_STR("avformat_close_input,url=%1%",%_ctxFormat->filename))
         avformat_close_input(&_ctxFormat);
+    }
     _pins.clear();
     _is_open = false;
 }
@@ -518,15 +528,14 @@ void ffmpeg_source::reset()
     _eof = false;
 }
 
-int ffmpeg_source::timeout_callback(void *param)
+int ffmpeg_source::on_timeout()
 {
-    ffmpeg_source* source = (ffmpeg_source*)param;
-    int64_t duration = get_local_time() - source->_begin_method;
-    if(source->_name_method == "av_read_frame")
+    int64_t duration = get_local_time() - _begin_method;
+    if(_name_method == "av_read_frame")
     {
-        if(10000000 < duration)
+        if(50000000 < duration)
         {
-            TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+            TRACE(dump::warn,FORMAT_STR("time out,method=%1%",%_name_method))
             return 1;
         }
     }
@@ -534,9 +543,15 @@ int ffmpeg_source::timeout_callback(void *param)
     {
         if(50000000 < duration)
         {
-            TRACE(dump::warn,FORMAT_STR("method:%1% time out",%source->_name_method))
+            TRACE(dump::warn,FORMAT_STR("time out,method=%1%",%_name_method))
             return 1;
         }
     }
     return 0;
+}
+
+int ffmpeg_source::timeout_callback(void *param)
+{
+    ffmpeg_source* source = (ffmpeg_source*)param;
+    return source->on_timeout();
 }

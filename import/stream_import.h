@@ -6,6 +6,7 @@
 class stream_import : public media_task
 {
     protected:
+        DUMP_DEF(stream_import)
         string _sour;
         string _dest;
         source_ptr _source;

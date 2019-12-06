@@ -62,6 +62,7 @@ media_thread_pool::media_thread_pool(size_t count_thread)
 media_thread_pool::~media_thread_pool()
 {
     //dtor
+    g_dump.set_class("media_thread_pool");
     _ioc.stop();
 
     for (auto& t : _threads)

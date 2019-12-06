@@ -13,6 +13,7 @@ tracker_source::tracker_source(engine_tracker* tracker,SegmentIt it,int64_t time
 ,_start(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_stop(MEDIA_FRAME_NONE_TIMESTAMP)
 {
+    g_dump.set_class("tracker_source");
 }
 
 tracker_source::~tracker_source()

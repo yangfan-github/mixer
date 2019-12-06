@@ -4,6 +4,7 @@ ffmpeg_audio_decoder::ffmpeg_audio_decoder()
 :_ctxCodec(nullptr)
 ,_avframe(nullptr)
 {
+    g_dump.set_class("ffmpeg_audio_decoder");
 	av_init_packet(&_pkt);
     //ctor
 }
@@ -132,7 +133,7 @@ ret_type ffmpeg_audio_decoder::process(input_pin* pin,frame_ptr frame)
             else if(0 > cb)
             {
                 char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-                JCHKM(0 <= cb,rc_fail,FORMAT_STR("ffmpeg decode frame[DTS:%1%] fail,msg:%2%",
+                JCHKM(0 <= cb,rc_fail,FORMAT_STR("avcodec_decode_audio4 fail,DTS=%1%,message=%2%",
                     %(frame->_info.dts/10000)%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,cb)))
             }
         }
@@ -148,7 +149,7 @@ ret_type ffmpeg_audio_decoder::open(media_type* mt)
 
     AVCodec* codec;
     AVCodecContext* ctxCodec;
-    JCHKM(codec = avcodec_find_decoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("media[%1%] can not find decoder",%mt->get_sub_name()));
+    JCHKM(codec = avcodec_find_decoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("can not find decoder,sub=%1%",%mt->get_sub_name()));
     JCHK(ctxCodec = avcodec_alloc_context3(codec),rc_fail)
     ctxCodec->time_base = FRAME_TIMEBASE;
     ctxCodec->sample_fmt = (AVSampleFormat)mt->get_audio_format();

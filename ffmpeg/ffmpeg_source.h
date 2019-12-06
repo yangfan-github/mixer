@@ -72,6 +72,7 @@ class ffmpeg_source : public media_source
         bool is_eof();
         //ffmpeg_source
         void reset();
+        int on_timeout();
         static int timeout_callback(void *param);
 };
 

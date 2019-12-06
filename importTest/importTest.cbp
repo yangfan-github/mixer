@@ -12,7 +12,7 @@
 				<Option object_output="../obj/Debug/importTest/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="rtmp://192.168.10.114/app/stream1 rtmp://192.168.10.114/app/stream2" />
+				<Option parameters="rtmp://test-dianxin.pull.offcncloud.com/d036ea58e5a0beb11da5dcfad7f4a494leih34u8/2019092510002 rtmp://test-dianxin.push.offcncloud.com/d036ea58e5a0beb11da5dcfad7f4a494leih34u8/2019092510442" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

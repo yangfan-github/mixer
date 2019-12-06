@@ -9,6 +9,7 @@ class engine_tracker
         friend class tracker_mixer;
         friend class tracker_source;
     protected:
+        DUMP_DEF(engine_tracker)
         tracker_mixer* _mixer;
         media_ptr _mt;
         int _pos_x;

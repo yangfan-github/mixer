@@ -4,6 +4,7 @@ ffmpeg_audio_resample::ffmpeg_audio_resample()
 :_ctxSwr(nullptr)
 {
     //ctor
+    g_dump.set_class("ffmpeg_audio_resample");
 }
 
 ffmpeg_audio_resample::~ffmpeg_audio_resample()
@@ -119,7 +120,7 @@ ret_type ffmpeg_audio_resample::process(input_pin* pin,frame_ptr frame)
             int ret;
             char err[AV_ERROR_MAX_STRING_SIZE] = {0};
             JCHKM(0 <= (ret = swr_init(_ctxSwr)),rc_fail,
-                FORMAT_STR("swr_init fail,message:%1%",
+                FORMAT_STR("swr_init fail,message=%1%",
                 %av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
         }
 
@@ -139,7 +140,7 @@ ret_type ffmpeg_audio_resample::process(input_pin* pin,frame_ptr frame)
 		int ret;
 		char err[AV_ERROR_MAX_STRING_SIZE] = {0};
 		JCHKM(0 <= (ret = swr_convert(_ctxSwr,dataOut,frame_out->_info.samples,(const uint8_t**)dataIn,frame->_info.samples)),
-			rc_fail,FORMAT_STR("audio resample frame fail,message:%1%",%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+			rc_fail,FORMAT_STR("swr_convert fail,message=%1%",%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
         return audio_sample(frame_out);
     }
     else

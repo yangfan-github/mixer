@@ -4,6 +4,7 @@ ffmpeg_video_decoder::ffmpeg_video_decoder()
 :_ctxCodec(nullptr)
 ,_avframe(nullptr)
 {
+    g_dump.set_class("ffmpeg_video_decoder");
 	av_init_packet(&_pkt);
     //ctor
 }
@@ -125,8 +126,8 @@ ret_type ffmpeg_video_decoder::process(input_pin* pin,frame_ptr frame)
         else
         {
             char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-            JCHKM(0 <= ret,rc_fail,FORMAT_STR("ffmpeg video decode frame[DTS:%1%ms] fail,msg:%2%",
-                %(frame->_info.dts/10000)%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
+            JCHKM(0 <= ret,rc_fail,FORMAT_STR("avcodec_decode_video2 fail,DTS=%1%,message=%2%",
+                %frame->_info.dts%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
         }
     }
     return rt;
@@ -137,7 +138,7 @@ ret_type ffmpeg_video_decoder::open(media_type* mt)
     close();
 
     AVCodec* codec;
-    JCHKM(codec = avcodec_find_decoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("media[%1%] can not find decoder",%mt->get_sub_name()));
+    JCHKM(codec = avcodec_find_decoder((AVCodecID)mt->get_sub()),rc_param_invalid,FORMAT_STR("can not find decoder,sub=%1%",%mt->get_sub_name()));
     JCHK(_ctxCodec = avcodec_alloc_context3(codec),rc_fail)
     _ctxCodec->time_base = FRAME_TIMEBASE;
     if(true == mt->get_global_header())

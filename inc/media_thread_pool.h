@@ -25,6 +25,7 @@ class media_thread_pool
 {
         typedef boost::asio::io_context::executor_type ExecutorType;
     protected:
+        DUMP_DEF(media_thread_pool)
         boost::asio::io_context _ioc;
         boost::asio::executor_work_guard<ExecutorType> _work_guard;
         vector<std::thread> _threads;

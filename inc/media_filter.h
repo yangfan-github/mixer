@@ -11,6 +11,7 @@ typedef std::shared_ptr<media_filter> filter_ptr;
 class media_pin
 {
     protected:
+        DUMP_DEF(media_pin)
         media_ptr _mt;
         media_filter* _filter;
     public:
@@ -74,6 +75,8 @@ class media_filter : public std::enable_shared_from_this<media_filter>
 {
         friend class input_pin;
         friend class output_pin;
+    protected:
+        DUMP_DEF(media_filter)
     public:
         media_filter();
         virtual ~media_filter();

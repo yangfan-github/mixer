@@ -60,7 +60,6 @@ class dump
         void trace(level lev,const string& describe);
     protected:
         void output(dump* dp,string& cls,dump* dmp,level lev,const string& describe);
-    private:
 };
 
 extern dump g_dump;
@@ -73,8 +72,12 @@ public:
         _class = typeid(T).name();
         _dump = &g_dump;
     }
+    void set_class(const char* name)
+    {
+        if(nullptr != name)
+            _class = name;
+    }
 };
-
 
 #define DUMP_DEF(cls) \
     dump_imp<cls> g_dump;

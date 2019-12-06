@@ -10,6 +10,7 @@ engine_tracker::engine_tracker(tracker_mixer* mixer)
 ,_eof(false)
 {
     //ctor
+    g_dump.set_class("engine_tracker");
 }
 
 engine_tracker::~engine_tracker()

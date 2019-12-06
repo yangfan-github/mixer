@@ -11,6 +11,7 @@ class mixer_engine : public media_task
         typedef list<render_ptr> RenderSet;
         typedef RenderSet::iterator RenderIt;
     protected:
+        DUMP_DEF(mixer_engine)
         std::shared_ptr<engine_source> _source;
         RenderSet _renders;
         std::timed_mutex _mt_wait;

@@ -4,6 +4,7 @@ ffmpeg_video_scale::ffmpeg_video_scale()
 :_ctxSws(nullptr)
 {
     //ctor
+    g_dump.set_class("ffmpeg_video_scale");
 }
 
 ffmpeg_video_scale::~ffmpeg_video_scale()
@@ -103,7 +104,7 @@ ret_type ffmpeg_video_scale::process(input_pin* pin,frame_ptr frame)
         JIF(convert_frame_to_array(mt_out,frame_out,(uint8_t**)dataOut,(int*)linesizeOut))
         //TRACE(dump::info,FORMAT_STR("video scale frame PTS:%1%",%(frame->_info.pts)))
 		JCHKM(height_out == sws_scale(_ctxSws,dataIn,linesizeIn,0,height_in,dataOut,linesizeOut),
-            rc_fail,FORMAT_STR("ffmpeg video scale frame[PTS:%1%] fail",%frame->_info.pts))
+            rc_fail,FORMAT_STR("sws_scale fail,PTS=%1%",%frame->_info.pts))
 
         return video_sample(frame_out);
     }

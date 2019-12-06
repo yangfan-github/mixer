@@ -6,7 +6,7 @@ using namespace boost::posix_time;
 dump g_dump;
 
 dump::dump()
-:_level(level::debug)
+:_level(level::info)
 ,_dump(nullptr)
 {
     //ctor

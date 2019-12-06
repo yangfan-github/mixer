@@ -6,7 +6,7 @@ tracker_mixer::tracker_mixer(engine_source* source)
 ,_count_eof(0)
 ,_eof(false)
 {
-
+    g_dump.set_class("tracker_mixer");
 }
 
 tracker_mixer::~tracker_mixer()
@@ -160,6 +160,7 @@ engine_source::engine_source(mixer_engine* engine)
 ,_count_eof(0)
 {
     //ctor
+    g_dump.set_class("engine_source");
 }
 
 engine_source::~engine_source()

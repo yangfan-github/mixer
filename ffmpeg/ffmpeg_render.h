@@ -25,7 +25,6 @@ class ffmpeg_render : public media_render
         typedef list<std::shared_ptr<stream>> StreamSet;
         typedef StreamSet::iterator StreamIt;
     protected:
-        ffmpeg_render* _render;
         StreamSet _streams;
         AVFormatContext* _ctxFormat;
         stream* _master;

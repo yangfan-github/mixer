@@ -49,7 +49,6 @@
 		<ExtraCommands>
 			<Add after="cp -f ../lib/libmixerEngine.so /usr/local/lib/libmixerEngine.so" />
 		</ExtraCommands>
-		<Unit filename="../inc/dump.h" />
 		<Unit filename="../inc/mixerEngine.h" />
 		<Unit filename="engine_source.cpp" />
 		<Unit filename="engine_source.h" />
