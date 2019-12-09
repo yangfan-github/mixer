@@ -12,6 +12,7 @@ int main(int argc,char *argv[])
     if(nullptr == handle)
         return -1;
 
+    cout << "press any key to stop and exit!" << endl;
     getchar();
 
     import_stop(handle);

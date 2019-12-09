@@ -45,6 +45,7 @@ class meida_timer : public std::enable_shared_from_this<meida_timer>
 media_thread_pool::media_thread_pool(size_t count_thread)
 :_work_guard(boost::asio::make_work_guard(_ioc))
 {
+    g_dump.set_class("media_thread_pool");
     if(0 == count_thread)
     {
         int enableCPUNum_ = sysconf(_SC_NPROCESSORS_ONLN);
@@ -62,7 +63,6 @@ media_thread_pool::media_thread_pool(size_t count_thread)
 media_thread_pool::~media_thread_pool()
 {
     //dtor
-    g_dump.set_class("media_thread_pool");
     _ioc.stop();
 
     for (auto& t : _threads)

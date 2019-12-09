@@ -1,7 +1,10 @@
 {
-  "outputs": {
-    "./out.mp4":["video/720p","audio/64k"]
-  },
+  "outputs": [
+    {
+    "url":"./out.mp4",
+    "trackers":["video/720p","audio/64k"]
+    }
+   ],
   "inputs":[
     {
       "trackers":["video/main","audio/main"],

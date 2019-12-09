@@ -70,9 +70,15 @@ ret_type mixer_engine::run(const char* task_file)
 
         BOOST_FOREACH(property_tree::ptree::value_type &pt_output, pt_outputs.value())
         {
-            render_ptr render = create_filter<media_render>(pt_output.first.c_str());
+            optional<string> url = pt_output.second.get_optional<string>("url");
+            JCHK(url&&!url.value().empty(),rc_param_invalid)
+
+            optional<property_tree::ptree&> pt_trackers = pt_output.second.get_child_optional("trackers");
+            JCHK(pt_trackers,rc_param_invalid)
+
+            render_ptr render = create_filter<media_render>(url.value().c_str());
             JCHK(render,rc_param_invalid)
-            BOOST_FOREACH(property_tree::ptree::value_type &pt_stream, pt_output.second)
+            BOOST_FOREACH(property_tree::ptree::value_type &pt_stream, pt_trackers.value())
             {
                 mixer_ptr mixer;
                 media_ptr mt;
@@ -83,7 +89,7 @@ ret_type mixer_engine::run(const char* task_file)
                 JCHK(pin = render->create_pin(mt),rc_param_invalid);
                 JIF(connect(std::dynamic_pointer_cast<output_pin>(mixer),pin));
             }
-            JIF(render->open(pt_output.first))
+            JIF(render->open(url.value()))
             _renders.insert(_renders.end(),render);
         }
         BOOST_FOREACH(property_tree::ptree::value_type &pt_segment, pt_segments.value())
