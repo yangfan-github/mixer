@@ -1,7 +1,7 @@
 {
   "outputs": [
     {
-    "url":"./out.mp4",
+    "url":"./out/index.m3u8",
     "trackers":["video/720p","audio/64k"]
     }
    ],
@@ -14,6 +14,16 @@
     {
       "trackers":["video/teacher","audio/teacher"],
       "time_base":4000,
+      "url":"./task/main.mp4"
+    },
+    {
+      "trackers":["video/main","audio/main"],
+      "time_base":10000,
+      "url":"./task/main.mp4"
+    },
+    {
+      "trackers":["video/teacher","audio/teacher"],
+      "time_base":15000,
       "url":"./task/main.mp4"
     }
   ]
