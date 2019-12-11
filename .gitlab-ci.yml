@@ -4,7 +4,7 @@ stages:
   - deploy
   
 variables:
-  VERSION: "1.$CI_PIPELINE_ID"
+  VERSION: "2.$CI_PIPELINE_ID"
   BUILDDIR: "/builds"
   LOCALDIR: "/opt/gitlab-runner/builds"
 
@@ -19,10 +19,10 @@ variables:
   
 mixer-build:
   tags:
-    - lvs12-mixer-docker
+    - master-mixer-docker
   stage: build
   only:
-    - develop
+    - master
   retry: 1
   script:
     - pwd
