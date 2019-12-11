@@ -26,6 +26,7 @@ mixer-build:
   retry: 1
   script:
     - pwd
+    - if [ -d "${ffmpeg}/target" ];then mkdir -p ${ffmpeg}/target;fi
     - rm -rf ${ffmpeg}/target/*
     - ffmpeg=${BUILDDIR}/ffmpeg
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
