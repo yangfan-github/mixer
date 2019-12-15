@@ -84,7 +84,7 @@ ret_type mixer_engine::run(const char* task_file)
                 media_ptr mt;
                 input_pin_ptr pin;
                 string path = pt_stream.second.get_value<string>();
-                JCHK(mixer = _source->find(path),rc_param_invalid)
+                JCHKM(mixer = _source->find(path),rc_param_invalid,FORMAT_STR("can not find mixer output,path=%1%",%path))
                 JCHK(mt = mixer->find_output(path),rc_param_invalid)
                 JCHK(pin = render->create_pin(mt),rc_param_invalid);
                 JIF(connect(std::dynamic_pointer_cast<output_pin>(mixer),pin));

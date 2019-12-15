@@ -207,7 +207,7 @@ std::shared_ptr<tracker_mixer> engine_source::find(string& path)
     string key = path.substr(0,slash);
     path = path.substr(slash+1);
     MixerIt it = _mixers.find(key);
-    JCHKR(it != _mixers.end(),rc_param_invalid,nullptr)
+    JCHKMR(it != _mixers.end(),rc_param_invalid,FORMAT_STR("can not find mixer,name=%1%",%path),nullptr)
     return it->second;
 }
 
@@ -231,13 +231,13 @@ ret_type engine_source::append(property_tree::ptree& segment)
     {
         string path = pt_tracker.second.get_value<string>();
         size_t slash = path.find('/');
-        JCHK(slash != string::npos,rc_param_invalid)
+        JCHKM(slash != string::npos,rc_param_invalid,FORMAT_STR("invalid segment path,path=%1%",%path))
         string key = path.substr(0,slash);
         path = path.substr(slash+1);
         MixerIt it_mixer = _mixers.find(key);
-        JCHK(it_mixer != _mixers.end(),rc_param_invalid)
+        JCHKM(it_mixer != _mixers.end(),rc_param_invalid,FORMAT_STR("can not find segment mixer,name=%1%",%key))
         TrackerType tracker = it_mixer->second->find_tracker(path);
-        JCHK(tracker,rc_param_invalid)
+        JCHKM(tracker,rc_param_invalid,FORMAT_STR("can not find segment tracker,name=%1%",%path))
         JIF(tracker->add_segment(segment))
     }
     return rt;
