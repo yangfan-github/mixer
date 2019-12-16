@@ -32,6 +32,7 @@ mixer-build:
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - ulimit -c unlimited
     - make
+    - cp -f ./third-party/ffSDK/lib/libavformat.so.57 lib/
     - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/plugins/
     - cp -a inc lib bin ${ffmpeg}/target/
     - cp -f lib/* /usr/local/lib/
