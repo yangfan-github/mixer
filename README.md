@@ -44,4 +44,5 @@ cd ./bin
 1. 依赖boost的编译结果，同样放在系统目录。
 2. 依赖安装的包:  
     libavcodec57 libavformat57 libavutil55 libswresample2 libswscale4  libpostproc54  libavfilter6
-3. 依赖mixer的所有输出。其文件系统布局详见编译过程。    
+3. 依赖mixer的所有输出。其文件系统布局详见编译过程。 
+4. ./third-party/ffSDK/lib/libavformat.so.57 覆盖 /usr/local/lib/libavformat.so.57
