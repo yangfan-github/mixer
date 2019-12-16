@@ -61,6 +61,9 @@ void dump::output(dump* dp,string& cls,dump* dmp,level lev,const string& describ
             %cls
             %dmp
             %describe);
-        cout << s << endl;
+        if(lev == error)
+            cerr << s << endl;
+        else
+            clog << s << endl;
     }
 }

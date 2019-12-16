@@ -9,7 +9,7 @@
     {
       "trackers":["video/main","audio/main"],
       "time_base":0,
-      "url":"./task/main.mp4"
+      "url":"./task/main1.mp4"
     },
     {
       "trackers":["video/teacher","audio/teacher"],
