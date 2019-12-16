@@ -140,7 +140,7 @@ ret_type engine_tracker::next_source(SegmentIt& it)
 
         if(!it->second._source)
         {
-            JIF(_mixer->_source->add_segment(it))
+            JIFM(_mixer->_source->add_segment(it),"tracker source ignore")
         }
     }
     return rt;
@@ -166,8 +166,12 @@ ret_type engine_tracker::process(media_task* task,frame_ptr frame,uint8_t** dst_
 
     if(!_source)
     {
-        rt = next_source(_it_segment);
-        if(rt != rc_ok)
+        do
+        {
+            rt = next_source(_it_segment);
+        }while(rc_ok != rt && media_task::rc_eof != rt);
+
+        if( media_task::rc_eof == rt)
         {
             _eof = true;
             return media_task::rc_eof;

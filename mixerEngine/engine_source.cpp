@@ -62,14 +62,14 @@ ret_type tracker_mixer::load(property_tree::ptree& pt_mixer)
         JIF(mt_out->load(pt_output.second))
         JCHK(mt_out->get_major() == _mt->get_major(),rc_param_invalid)
         JIF(media_type::copy(mt_out,_mt,true))
-        JCHK(_outputs.insert(OutputPair(pt_output.first,mt_out)).second,rc_param_invalid)
+        JCHKM(_outputs.insert(OutputPair(pt_output.first,mt_out)).second,rc_param_invalid,FORMAT_STR("mixer's output is exist,name=%1%",%pt_output.first))
     }
 
     BOOST_FOREACH(property_tree::ptree::value_type &pt_tracker, pt_trackers.value())
     {
         std::shared_ptr<engine_tracker> tracker(new engine_tracker(this));
         JCHK(tracker,rc_new_fail)
-        JCHK(_trackers.insert(TrackerPair(pt_tracker.first,tracker)).second,rc_param_invalid)
+        JCHKM(_trackers.insert(TrackerPair(pt_tracker.first,tracker)).second,rc_param_invalid,FORMAT_STR("mixer's tracker is exist,name=%1%",%pt_tracker.first))
         JIF(tracker->load(pt_tracker.second))
     }
     return rt;
@@ -180,7 +180,7 @@ ret_type engine_source::load(property_tree::ptree& pt)
     {
         std::shared_ptr<tracker_mixer> mixer(new tracker_mixer(this));
         JCHK(mixer,rc_new_fail)
-        JCHK(_mixers.insert(MixerPair(pt_stream.first,mixer)).second,rc_param_invalid)
+        JCHKM(_mixers.insert(MixerPair(pt_stream.first,mixer)).second,rc_param_invalid,FORMAT_STR("mixer is exist,name-=%1%",%pt_stream.first))
         JIF(mixer->load(pt_stream.second))
     }
     _duration = 0;
@@ -280,7 +280,7 @@ ret_type engine_source::add_segment(SegmentIt it)
 
     source_ptr source = create_filter<media_source>(url.value().c_str());
     JCHK(source,rc_param_invalid)
-    JIF(source->open(url.value()))
+    JIFM(source->open(url.value()),FORMAT_STR("segment source open fail,will be ignore,url=%1%",%url.value()))
     int64_t time_base = (it->first - _time_base)*10000;
     source->set_base(time_base);
 
