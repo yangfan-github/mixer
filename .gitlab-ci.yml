@@ -29,7 +29,7 @@ mixer-build:
     - sed -i 's|security.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
     - apt update
     - apt install -y --no-install-recommends yasm
-    - echo -e "\e[40;32m 编译 libavformat.so.57 \e[0m"
+    - echo -e "\e[40;31m 编译 libavformat.so.57 \e[0m"
     - cd ./third-party/ffSDK/src
     - ./configure --enable-shared
     - make
@@ -39,10 +39,10 @@ mixer-build:
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - ulimit -c unlimited
     - cd ${workdir}
-    - find ${workdir} -name "libavformat*"
+    # - find ${workdir} -name "libavformat*"
     - make
     - mkdir -p lib
-    - cp -f ./third-party/ffSDK/lib/libavformat.so.57 lib/
+    - cp -f ./third-party/ffSDK/src/libavformat/libavformat.so.57 lib/
     - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/plugins/
     - cp -a inc lib bin ${ffmpeg}/target/
     - cp -f lib/* /usr/local/lib/
