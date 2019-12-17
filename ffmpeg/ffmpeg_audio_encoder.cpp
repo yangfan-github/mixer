@@ -52,7 +52,6 @@ ret_type ffmpeg_audio_encoder::set_media_type(output_pin* pin,media_ptr mt)
         mt_in->set_sub(MST_PCM);
         mt_in->set_global_header(false);
         mt_in->set_extra_data(nullptr,0);
-        mt_in->set_bitrate(0);
         return _pin_input->set_media_type(mt_in);
     }
     else
@@ -141,7 +140,7 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
     _ctxCodec->flags |= CODEC_FLAG_GLOBAL_HEADER;
     _ctxCodec->flags2 &= ~AV_CODEC_FLAG2_LOCAL_HEADER;
 
-    JCHK(0 < (_ctxCodec->bit_rate = mt->get_bitrate()),rc_param_invalid)
+    get_option(_ctxCodec,mt->get_codec_option());
 
     int ret;
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
@@ -150,8 +149,6 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
             FORMAT_STR("avcodec_open2 fail,sub=%1%,message=%2%",
             %mt->get_sub_name()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
 
-    property_tree::ptree pt = mt->get_codec_option();
-    get_option(_ctxCodec->priv_data,pt);
 
     return mt->set_extra_data(_ctxCodec->extradata,_ctxCodec->extradata_size);
 }

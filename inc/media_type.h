@@ -33,7 +33,6 @@ class media_type : public std::enable_shared_from_this<media_type>
         bool _is_global_header;
         uint8_t* _extra_data;
         int _extra_size;
-        int _bitrate;
         property_tree::ptree _codec_option;
         media_type();
         virtual ~media_type();
@@ -79,10 +78,8 @@ class media_type : public std::enable_shared_from_this<media_type>
         ret_type set_extra_data(uint8_t* data,int size);
         uint8_t* get_extra_data();
         int get_extra_size();
-        void set_bitrate(int bitrate);
-        int get_bitrate();
         void set_codec_option(const property_tree::ptree& pt);
-        property_tree::ptree get_codec_option();
+        property_tree::ptree& get_codec_option();
         ret_type load(property_tree::ptree& pt);
         ret_type save(property_tree::ptree& pt);
         static media_ptr create();

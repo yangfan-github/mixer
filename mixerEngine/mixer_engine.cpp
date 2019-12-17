@@ -73,7 +73,7 @@ ret_type mixer_engine::run(const char* task_file)
             optional<string> url = pt_output.second.get_optional<string>("url");
             JCHK(url&&!url.value().empty(),rc_param_invalid)
 
-            optional<property_tree::ptree&> pt_trackers = pt_output.second.get_child_optional("trackers");
+            optional<property_tree::ptree&> pt_trackers = pt_output.second.get_child_optional("streams");
             JCHK(pt_trackers,rc_param_invalid)
 
             render_ptr render = create_filter<media_render>(url.value().c_str());

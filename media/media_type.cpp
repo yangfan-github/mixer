@@ -44,7 +44,6 @@ media_type::media_type()
 ,_is_global_header(false)
 ,_extra_data(nullptr)
 ,_extra_size(0)
-,_bitrate(0)
 {
 }
 
@@ -357,22 +356,12 @@ int media_type::get_extra_size()
     return _extra_size;
 }
 
-void media_type::set_bitrate(int bitrate)
-{
-    _bitrate = 0 < bitrate ? bitrate : 0;
-}
-
-int media_type::get_bitrate()
-{
-    return _bitrate;
-}
-
 void media_type::set_codec_option(const property_tree::ptree& pt)
 {
     _codec_option = pt;
 }
 
-property_tree::ptree media_type::get_codec_option()
+property_tree::ptree& media_type::get_codec_option()
 {
     return _codec_option;
 }
@@ -440,10 +429,6 @@ ret_type media_type::copy(media_ptr dest,const media_ptr& sour,bool partial)
         {
             JIF(dest->set_extra_data(sour->get_extra_data(),sour->get_extra_size()))
         }
-        if(0 == dest->get_bitrate())
-        {
-            dest->set_bitrate(sour->get_bitrate());
-        }
     }
     else
     {
@@ -462,7 +447,6 @@ ret_type media_type::copy(media_ptr dest,const media_ptr& sour,bool partial)
         dest->set_audio_frame_size(sour->get_audio_frame_size());
         dest->set_global_header(sour->get_global_header());
         JIF(dest->set_extra_data(sour->get_extra_data(),sour->get_extra_size()))
-        dest->set_bitrate(sour->get_bitrate());
         dest->set_codec_option(sour->get_codec_option());
     }
     return rt;
@@ -478,8 +462,6 @@ bool media_type::compare(const media_ptr& mt1,const media_ptr& mt2)
     if(mt1->get_major() != mt2->get_major())
         return false;
     if(mt1->get_sub() != mt2->get_sub())
-        return false;
-    if(mt1->get_bitrate() != mt2->get_bitrate())
         return false;
     if(MMT_VIDEO == mt1->get_major())
     {
@@ -593,12 +575,7 @@ ret_type media_type::load(property_tree::ptree& pt)
         set_audio_frame_size(audio_frame_size.value());
     }
 
-    optional<int> bitrate = pt.get_optional<int>("bitrate");
-    if(bitrate)
-    {
-        set_bitrate(bitrate.value());
-    }
-    optional<property_tree::ptree&> opt = pt.get_child_optional("codec_option");
+    optional<property_tree::ptree&> opt = pt.get_child_optional("codec");
     if(opt)
         _codec_option = opt.value();
     else

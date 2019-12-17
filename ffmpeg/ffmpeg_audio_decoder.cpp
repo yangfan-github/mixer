@@ -58,7 +58,6 @@ ret_type ffmpeg_audio_decoder::set_media_type(input_pin* pin,media_ptr mt)
         mt_out->set_sub(MST_PCM);
         mt_out->set_global_header(false);
         mt_out->set_extra_data(nullptr,0);
-        mt_out->set_bitrate(0);
         return _pin_output->set_media_type(mt_out);
     }
     else
