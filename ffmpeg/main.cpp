@@ -210,32 +210,54 @@ void get_audio_sample_rate(const int* supported_samplerates,int& sample_rate)
     sample_rate = sample_rate_result;
 }
 
-void get_option(void* obj,property_tree::ptree& pt)
+void get_option(void* ctx,const string& key,property_tree::ptree& pt)
+{
+    int rl = -1;
+    optional<string> str_value = pt.get_value_optional<string>();
+    if(str_value)
+    {
+        string str = str_value.value();
+        rl = av_opt_set(ctx,key.c_str(),str.c_str(),0);
+    }
+    if(0 != rl)
+    {
+        optional<int64_t> int_value = pt.get_value_optional<int64_t>();
+        if(int_value)
+            rl = av_opt_set_int(ctx,key.c_str(),int_value.value(),0);
+    }
+    if(0 != rl)
+    {
+        optional<double> float_value = pt.get_value_optional<double>();
+        if(float_value)
+            rl = av_opt_set_double(ctx,key.c_str(),float_value.value(),0);
+    }
+    if(0 != rl)
+    {
+        TRACE(dump::warn,FORMAT_STR("set codec option fail,key = %1%",%key))
+    }
+}
+
+void get_option(AVCodecContext* ctx,property_tree::ptree& pt)
 {
     BOOST_FOREACH(property_tree::ptree::value_type &pt_option, pt)
     {
-        int rl = -1;
-        optional<int> int_value = pt_option.second.get_value_optional<int>();
-        if(int_value)
-            rl = av_opt_set_int(obj,pt_option.first.c_str(),int_value.value(),0);
-        else
+        if(pt_option.second.empty())
         {
-            optional<double> float_value = pt_option.second.get_value_optional<double>();
-            if(float_value)
-                rl = av_opt_set_double(obj,pt_option.first.c_str(),float_value.value(),0);
-            else
+            get_option(ctx,pt_option.first,pt_option.second);
+        }
+        else if(nullptr != ctx->codec)
+        {
+            if(pt_option.first == ctx->codec->name)
             {
-                optional<string> str_value = pt_option.second.get_value_optional<string>();
-                if(str_value)
+                BOOST_FOREACH(property_tree::ptree::value_type &pt_codec, pt_option.second)
                 {
-                    string str = str_value.value();
-                    rl = av_opt_set(obj,pt_option.first.c_str(),str.c_str(),0);
+                    get_option(ctx->priv_data,pt_codec.first,pt_codec.second);
                 }
             }
-        }
-        if(0 != rl)
-        {
-            TRACE(dump::warn,FORMAT_STR("set option:[%1%] fail",%pt_option.first))
+            else
+            {
+                TRACE(dump::warn,FORMAT_STR("codec invalid option,key = %1%",%pt_option.first))
+            }
         }
     }
 }

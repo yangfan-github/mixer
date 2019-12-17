@@ -9,13 +9,14 @@
     "outputs":{
       "720p":{
         "sub":"h264",
-        "bitrate":2000000,
-        "video_width":1280,
-        "video_height":720,
-	  "codec_option":{
-	    "preset":"medium",
-	    "tune":"film",
-	    "profile":"high"
+	  "codec":{
+          "b":2000000,
+          "g":25,
+          "libx264":{
+	      "profile":"high",
+	      "preset":"medium",
+	      "tune":"film"
+          }
 	}
       }
     },
@@ -45,7 +46,9 @@
     "outputs":{
       "64k":{
         "sub":"aac",
-        "bitrate":64000
+	  "codec":{
+          "b":64000
+        }
       }
     },
     "trackers":{
