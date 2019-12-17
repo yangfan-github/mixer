@@ -25,13 +25,18 @@ mixer-build:
     - develop
   retry: 1
   script:
-    - pwd
+    - workdir=$(pwd)
     - if [ -d "${ffmpeg}/target" ];then mkdir -p ${ffmpeg}/target;fi
     - rm -rf ${ffmpeg}/target/*
     - ffmpeg=${BUILDDIR}/ffmpeg
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - ulimit -c unlimited
     - make
+    - echo -e "\e[40;32m 编译 libavformat.so.57 \e[0m"
+    - cd ./third-party/ffSDK/src
+    - configure --enable-shared
+    - make
+    - cd ${workdir}
     - cp -f ./third-party/ffSDK/lib/libavformat.so.57 lib/
     - cp -f bin/plugins/libffmpeg.so ${ffmpeg}/target/plugins/
     - cp -a inc lib bin ${ffmpeg}/target/
