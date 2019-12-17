@@ -23,7 +23,6 @@ mixer-build:
   stage: build
   only:
     - develop
-  retry: 1
   script:
     - workdir=$(pwd)
     - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
