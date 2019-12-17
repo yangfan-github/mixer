@@ -38,5 +38,6 @@ mixer-build:
     - cp -f lib/* /usr/local/lib/
     - ldconfig
     - cd bin
+    - /lib/x86_64-linux-gnu/libc.so.6
     - ./mixerTest ./template.json ./task.json
     - ls -R ${ffmpeg}/target/
