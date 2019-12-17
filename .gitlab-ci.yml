@@ -34,7 +34,7 @@ mixer-build:
     - make
     - echo -e "\e[40;32m 编译 libavformat.so.57 \e[0m"
     - cd ./third-party/ffSDK/src
-    - configure --enable-shared
+    - ./configure --enable-shared
     - make
     - cd ${workdir}
     - cp -f ./third-party/ffSDK/lib/libavformat.so.57 lib/
