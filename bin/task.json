@@ -1,7 +1,7 @@
 {
   "outputs": [
     {
-    "url":"./out.mp4",
+    "url":"./out/index.m3u8",
     "streams":["video/720p","audio/64k"]
     }
    ],
