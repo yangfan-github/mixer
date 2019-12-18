@@ -48,4 +48,4 @@ cd ./bin
 4. 编译./third-party/ffSDK/src   
    ./third-party/ffSDK/src/configure --enable-shared   
    ./third-party/ffSDK/src/make   
-   ./third-party/ffSDK/lib/libavformat.so.57 覆盖 /usr/local/lib/libavformat.so.57   
+   ./third-party/ffsdk/src/libavformat/libavformat.so.57 覆盖 /usr/local/lib/libavformat.so.57   
