@@ -2,7 +2,7 @@
 #include "mixer_engine.h"
 
 mixer_engine::mixer_engine()
-:_eof(false)
+:_eof(true)
 {
     //ctor
     g_dump.set_class("mixer_engine");

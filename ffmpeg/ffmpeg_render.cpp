@@ -482,6 +482,10 @@ ret_type ffmpeg_render::open()
         _ctxFormat->oformat->video_codec = AV_CODEC_ID_H264;
         _ctxFormat->oformat->audio_codec = AV_CODEC_ID_AAC;
     }
+    else if(0 == strcmp(_ctxFormat->oformat->name,"hls"))
+    {
+        JCHK(0 == av_opt_set_int(_ctxFormat->priv_data,"hls_list_size",0,0),rc_fail);
+    }
 
     system::error_code ec;
     boost::filesystem::path path(_url);
