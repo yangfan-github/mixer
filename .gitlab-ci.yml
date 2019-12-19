@@ -24,7 +24,7 @@ mixer-build:
   only:
     - develop
   before_script:
-    - changeFiles=$(git diff --name-only HEAD~ HEAD | tee)
+    - changeFiles=$(git diff --name-only HEAD~ HEAD)
     - isSDKChanged=0
     - for i in ${changeFiles[@]};do
     - if [[ $i == *third-party/ffSDK* ]];then echo $i;isSDKChanged=1&&break;fi
