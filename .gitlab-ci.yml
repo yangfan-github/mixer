@@ -27,8 +27,7 @@ mixer-build:
     - changeFiles=$(git diff --name-only HEAD~ HEAD | tee)
     - isSDKChanged=0
     - for i in ${changeFiles[@]};do
-    - echo $i
-    - if [[ $i == *third-party/ffSDK* ]];then isSDKChanged=1;break;fi
+    - if [[ $i == *third-party/ffSDK* ]];then echo $i;isSDKChanged=1&&break;fi
     - done
     - if [ $isSDKChanged -gt 0 ];then
     - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
