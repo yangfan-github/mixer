@@ -23,6 +23,22 @@ mixer-build:
   stage: build
   only:
     - develop
+  before_script:
+    - changeFiles=$(git diff --name-only HEAD~ HEAD)
+    - isSDKChanged=0
+    - for i in ${changeFiles[@]};do \
+    - if [[ $i == *third-party/ffSDK* ]];then isSDKChanged=1;break;fi \
+    - done
+    - if [ $isSDKChanged -gt 0 ];then \
+    - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
+    - sed -i 's|security.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
+    - apt update
+    - apt install -y --no-install-recommends yasm
+    - echo -e "\e[40;31m 编译 libavformat.so.57 \e[0m" 
+    - cd ./third-party/ffSDK/src 
+    - ./configure --enable-shared
+    - make
+    - fi
   script:
     - workdir=$(pwd)
     # - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
