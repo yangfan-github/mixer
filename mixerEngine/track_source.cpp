@@ -45,6 +45,7 @@ ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
             _tracker->next_source(_it);
     }
     JIF(_buf.push(frame))
+
     if(nullptr != _task)
     {
         if(!frame || frame->_info.dts >= _task->_time)
