@@ -6,7 +6,6 @@ tracker_source::tracker_source(engine_tracker* tracker,SegmentIt it,int64_t time
 ,_it(it)
 ,_time_buf(time_buf)
 ,_pin(new input_pin(this))
-,_eof(false)
 ,_task(nullptr)
 ,_time_line(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_is_buf(false)
@@ -28,23 +27,28 @@ ret_type tracker_source::set_media_type(input_pin* pin,media_ptr mt)
 
 ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
 {
+    if(_buf.is_eof())
+        return rc_ok;
+
     ret_type rt;
 
     if(frame)
     {
-        int64_t time = frame->_info.dts - _time_buf;
-        //TRACE(dump::info,FORMAT_STR("tracker:%1% input frame dts:%2%ms pts%3%ms duration:%4%ms _time:%5%ms time_line:%6%ms",
-        //    %pin->get_media_type()->get_major_name()%(frame->_info.dts/10000)%(frame->_info.pts/10000)%(frame->_info.duration/10000)%(_time/10000)%(_time_line/10000)))
-        _time = time;
+        if(_stop != MEDIA_FRAME_NONE_TIMESTAMP && frame->_info.dts >= _stop)
+            frame.reset();
+        else
+            _time = frame->_info.dts - _time_buf;
     }
-
+    if(!frame)
+    {
+        if(nullptr != _tracker)
+            _tracker->next_source(_it);
+    }
     JIF(_buf.push(frame))
-
     if(nullptr != _task)
     {
         if(!frame || frame->_info.dts >= _task->_time)
         {
-            //TRACE(dump::info,"start engine mix")
             g_pool.post(_task);
             _task = nullptr;
         }
@@ -58,35 +62,17 @@ ret_type tracker_source::process()
 
     _source->process();
 
-    bool is_next = false;
-    if(_stop != MEDIA_FRAME_NONE_TIMESTAMP)
-        is_next = _time + _time_buf >= _stop;
-
-    if(true == _source->is_eof() && false == is_next)
-        is_next = true;
-
-    if(false == is_next)
+    if(_buf.is_eof())
+    {
+        return media_task::rc_eof;
+    }
+    else
     {
         if(_time > _time_line)
         {
             bool except = true;
             _is_buf.compare_exchange_weak(except,false);
             return media_task::rc_again;
-        }
-        else
-            return rc_ok;
-    }
-    else
-    {
-        if(false == _eof)
-        {
-            if(nullptr != _tracker)
-                _tracker->next_source(_it);
-            _eof = true;
-        }
-        if(_buf.is_eof())
-        {
-            return media_task::rc_eof;
         }
         else
             return rc_ok;
