@@ -39,11 +39,13 @@ ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
         else
             _time = frame->_info.dts - _time_buf;
     }
+
     if(!frame)
     {
         if(nullptr != _tracker)
             _tracker->next_source(_it);
     }
+
     JIF(_buf.push(frame))
 
     if(nullptr != _task)
