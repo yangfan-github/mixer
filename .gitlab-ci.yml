@@ -23,16 +23,28 @@ mixer-build:
   stage: build
   only:
     - develop
-  script:
-    - workdir=$(pwd)
+  before_script:
+    - isSDKChanged=$(git diff --name-only HEAD~ HEAD ./third-party/ffSDK | wc -l)
+    - if [ $isSDKChanged -gt 0 ];then
     - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
     - sed -i 's|security.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
     - apt update
     - apt install -y --no-install-recommends yasm
-    - echo -e "\e[40;31m 编译 libavformat.so.57 \e[0m"
-    - cd ./third-party/ffSDK/src
+    - echo -e "\e[40;31m 编译 libavformat.so.57 \e[0m" 
+    - cd ./third-party/ffSDK/src 
     - ./configure --enable-shared
     - make
+    - fi
+  script:
+    - workdir=$(pwd)
+    # - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
+    # - sed -i 's|security.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
+    # - apt update
+    # - apt install -y --no-install-recommends yasm
+    # - echo -e "\e[40;31m 编译 libavformat.so.57 \e[0m"
+    # - cd ./third-party/ffSDK/src
+    # - ./configure --enable-shared
+    # - make
     - if [ -d "${ffmpeg}/target" ];then mkdir -p ${ffmpeg}/target;fi
     - rm -rf ${ffmpeg}/target/*
     - ffmpeg=${BUILDDIR}/ffmpeg
