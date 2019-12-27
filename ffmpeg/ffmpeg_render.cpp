@@ -485,6 +485,7 @@ ret_type ffmpeg_render::open()
     else if(0 == strcmp(_ctxFormat->oformat->name,"hls"))
     {
         JCHK(0 == av_opt_set_int(_ctxFormat->priv_data,"hls_list_size",0,0),rc_fail);
+        JCHK(0 == av_opt_set_double(_ctxFormat->priv_data,"hls_time",5.0,0),rc_fail);
     }
 
     system::error_code ec;
