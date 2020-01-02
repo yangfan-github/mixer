@@ -138,7 +138,7 @@ class media_render : public media_filter
         media_render();
         virtual ~media_render();
         virtual input_pin_ptr create_pin(media_ptr mt) = 0;
-        virtual ret_type open(const string& url) = 0;
+        virtual ret_type open(const string& url,const property_tree::ptree& pt = property_tree::ptree()) = 0;
         virtual void close() = 0;
         virtual bool is_open() = 0;
         virtual bool is_eof() = 0;

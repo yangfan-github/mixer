@@ -93,6 +93,7 @@ typedef struct HLSContext {
     int64_t size;         // last segment size
     int nb_entries;
     int discontinuity_set;
+    int64_t ms_base;
 
     HLSSegment *segments;
     HLSSegment *last_segment;
@@ -483,7 +484,7 @@ fail:
     return ret;
 }
 
-static int hls_start(AVFormatContext *s)
+static int hls_start(AVFormatContext *s,AVPacket *pkt)
 {
     HLSContext *c = s->priv_data;
     AVFormatContext *oc = c->avf;
@@ -508,17 +509,22 @@ static int hls_start(AVFormatContext *s)
                 av_log(oc, AV_LOG_ERROR, "Could not get segment filename with use_localtime\n");
                 return AVERROR(EINVAL);
             }
-       } else if (av_get_frame_filename(oc->filename, sizeof(oc->filename),
-                                  c->basename, c->wrap ? c->sequence % c->wrap : c->sequence) < 0) {
-            av_log(oc, AV_LOG_ERROR, "Invalid segment filename template '%s' you can try use -use_localtime 1 with it\n", c->basename);
-            return AVERROR(EINVAL);
-        }
+       } else {
+            snprintf(oc->filename, sizeof(oc->filename),c->basename,c->ms_base + pkt->pts/90,c->sequence);
+            //av_log(s, AV_LOG_ERROR, "oc->filename=%s\n",oc->filename);
+       }
+       //else if (av_get_frame_filename(oc->filename, sizeof(oc->filename),
+       //                           c->basename, pkt->dts) < 0) {
+       //     av_log(oc, AV_LOG_ERROR, "Invalid segment filename template '%s' you can try use -use_localtime 1 with it\n", c->basename);
+       //     return AVERROR(EINVAL);
+       // }
         if( c->vtt_basename) {
-            if (av_get_frame_filename(vtt_oc->filename, sizeof(vtt_oc->filename),
-                              c->vtt_basename, c->wrap ? c->sequence % c->wrap : c->sequence) < 0) {
-                av_log(vtt_oc, AV_LOG_ERROR, "Invalid segment filename template '%s'\n", c->vtt_basename);
-                return AVERROR(EINVAL);
-            }
+            snprintf(vtt_oc->filename, sizeof(vtt_oc->filename),c->vtt_basename,c->ms_base + pkt->pts/90,c->sequence);
+//            if (av_get_frame_filename(vtt_oc->filename, sizeof(vtt_oc->filename),
+//                              c->vtt_basename, pkt->dts) < 0) {
+//                av_log(vtt_oc, AV_LOG_ERROR, "Invalid segment filename template '%s'\n", c->vtt_basename);
+//                return AVERROR(EINVAL);
+//            }
        }
     }
     c->number++;
@@ -586,9 +592,9 @@ static int hls_write_header(AVFormatContext *s)
     HLSContext *hls = s->priv_data;
     int ret, i;
     char *p;
-    const char *pattern = "%d.ts";
-    const char *pattern_localtime_fmt = "-%s.ts";
-    const char *vtt_pattern = "%d.vtt";
+    const char *pattern = "%ld_%ld.ts";
+    const char *pattern_localtime_fmt = "%s.ts";
+    const char *vtt_pattern = "%ld_%ld.vtt";
     AVDictionary *options = NULL;
     int basename_size;
     int vtt_basename_size;
@@ -655,9 +661,9 @@ static int hls_write_header(AVFormatContext *s)
 
         av_strlcpy(hls->basename, s->filename, basename_size);
 
-        p = strrchr(hls->basename, '.');
+        p = strrchr(hls->basename, '/');
         if (p)
-            *p = '\0';
+            *(++p) = '\0';
         if (hls->use_localtime) {
             av_strlcat(hls->basename, pattern_localtime_fmt, basename_size);
         } else {
@@ -697,8 +703,8 @@ static int hls_write_header(AVFormatContext *s)
     if ((ret = hls_mux_init(s)) < 0)
         goto fail;
 
-    if ((ret = hls_start(s)) < 0)
-        goto fail;
+    //if ((ret = hls_start(s)) < 0)
+    //    goto fail;
 
     av_dict_copy(&options, hls->format_options, 0);
     ret = avformat_write_header(hls->avf, &options);
@@ -739,12 +745,20 @@ fail:
 
 static int hls_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
+    int ret;
     HLSContext *hls = s->priv_data;
+    if(0 == hls->number)
+    {
+        ret = hls_start(s,pkt);
+        if(0 > ret)
+            return ret;
+    }
+
     AVFormatContext *oc = NULL;
     AVStream *st = s->streams[pkt->stream_index];
     int64_t end_pts = hls->recording_time * hls->number;
     int is_ref_pkt = 1;
-    int ret, can_split = 1;
+    int can_split = 1;
     int stream_index = 0;
 
     if( st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE ) {
@@ -795,7 +809,7 @@ static int hls_write_packet(AVFormatContext *s, AVPacket *pkt)
             if (hls->vtt_avf)
                 ff_format_io_close(s, &hls->vtt_avf->pb);
 
-            ret = hls_start(s);
+            ret = hls_start(s,pkt);
         }
 
         if (ret < 0)
@@ -811,6 +825,7 @@ static int hls_write_packet(AVFormatContext *s, AVPacket *pkt)
     }
 
     ret = ff_write_chained(oc, stream_index, pkt, s, 0);
+    //av_log(s, AV_LOG_ERROR, "ff_write_chained\n");
 
     return ret;
 }
@@ -873,7 +888,7 @@ static const AVOption options[] = {
     {"omit_endlist", "Do not append an endlist when ending stream", 0, AV_OPT_TYPE_CONST, {.i64 = HLS_OMIT_ENDLIST }, 0, UINT_MAX,   E, "flags"},
     { "use_localtime", "set filename expansion with strftime at segment creation", OFFSET(use_localtime), AV_OPT_TYPE_BOOL, {.i64 = 0 }, 0, 1, E },
     {"method", "set the HTTP method", OFFSET(method), AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,    E},
-
+    {"hls_begin", "set hls segment begin",  OFFSET( ms_base),    AV_OPT_TYPE_INT,    {.i64 = 0},     0, INT_MAX, E},
     { NULL },
 };
 

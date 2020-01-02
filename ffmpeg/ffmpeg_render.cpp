@@ -440,10 +440,11 @@ input_pin_ptr ffmpeg_render::create_pin(media_ptr mt)
     return pin;
 }
 
-ret_type ffmpeg_render::open(const string& url)
+ret_type ffmpeg_render::open(const string& url,const property_tree::ptree& pt)
 {
     JCHK(!url.empty(),rc_param_invalid)
     _url = url;
+    _options = pt;
     return open();
 }
 
@@ -482,10 +483,13 @@ ret_type ffmpeg_render::open()
         _ctxFormat->oformat->video_codec = AV_CODEC_ID_H264;
         _ctxFormat->oformat->audio_codec = AV_CODEC_ID_AAC;
     }
-    else if(0 == strcmp(_ctxFormat->oformat->name,"hls"))
-    {
-        JCHK(0 == av_opt_set_int(_ctxFormat->priv_data,"hls_list_size",0,0),rc_fail);
-    }
+    get_option(_ctxFormat,_options);
+//    else if(0 == strcmp(_ctxFormat->oformat->name,"hls"))
+//    {
+//        JCHK(0 == av_opt_set_int(_ctxFormat->priv_data,"hls_list_size",0,0),rc_fail);
+//        JCHK(0 == av_opt_set_double(_ctxFormat->priv_data,"hls_time",5.0,0),rc_fail);
+//        JCHK(0 == av_opt_set_int(_ctxFormat->priv_data,"hls_ms_base",1000,0),rc_fail);
+//    }
 
     system::error_code ec;
     boost::filesystem::path path(_url);

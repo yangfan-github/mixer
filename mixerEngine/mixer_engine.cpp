@@ -89,7 +89,8 @@ ret_type mixer_engine::run(const char* task_file)
                 JCHK(pin = render->create_pin(mt),rc_param_invalid);
                 JIF(connect(std::dynamic_pointer_cast<output_pin>(mixer),pin));
             }
-            JIF(render->open(url.value()))
+            optional<property_tree::ptree&> pt_options = pt_output.second.get_child_optional("options");
+            JIF(render->open(url.value(),pt_options ? pt_options.value() : property_tree::ptree()))
             _renders.insert(_renders.end(),render);
         }
         BOOST_FOREACH(property_tree::ptree::value_type &pt_segment, pt_segments.value())

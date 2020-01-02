@@ -12,6 +12,7 @@
         "codec":{
           "b":2000000,
           "g":25,
+          "bf":0,
           "libx264":{
             "profile":"high",
             "preset":"medium",

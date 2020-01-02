@@ -25,7 +25,6 @@ class tracker_source : public media_filter , public media_task
         media_frame_buf _buf;
         source_ptr _source;
         input_pin_ptr _pin;
-        bool _eof;
         media_task* _task;
         int64_t _time_line;
         std::atomic<bool> _is_buf;

@@ -280,6 +280,7 @@ ret_type engine_source::add_segment(SegmentIt it)
 
     source_ptr source = create_filter<media_source>(url.value().c_str());
     JCHK(source,rc_param_invalid)
+
     JIFM(source->open(url.value()),FORMAT_STR("segment source open fail,will be ignore,url=%1%",%url.value()))
     int64_t time_base = (it->first - _time_base)*10000;
     source->set_base(time_base);
