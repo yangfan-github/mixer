@@ -51,7 +51,7 @@ mixer-build:
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - ulimit -c unlimited
     - cd ${workdir}
-    # - find ${workdir} -name "libavformat*"
+    - find ${workdir} -name "libavformat*"
     - make
     - mkdir -p lib
     - cp -f ./third-party/ffSDK/src/libavformat/libavformat.so.57 lib/
