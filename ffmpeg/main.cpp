@@ -262,3 +262,14 @@ void get_option(AVCodecContext* ctx,property_tree::ptree& pt)
     }
 }
 
+void get_option(AVFormatContext* ctx,property_tree::ptree& pt)
+{
+    BOOST_FOREACH(property_tree::ptree::value_type &pt_option, pt)
+    {
+        if(pt_option.second.empty())
+        {
+            get_option(ctx->priv_data,pt_option.first,pt_option.second);
+        }
+    }
+}
+

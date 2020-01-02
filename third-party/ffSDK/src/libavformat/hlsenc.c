@@ -93,6 +93,7 @@ typedef struct HLSContext {
     int64_t size;         // last segment size
     int nb_entries;
     int discontinuity_set;
+    int64_t ms_base;
 
     HLSSegment *segments;
     HLSSegment *last_segment;
@@ -509,7 +510,7 @@ static int hls_start(AVFormatContext *s,AVPacket *pkt)
                 return AVERROR(EINVAL);
             }
        } else {
-            snprintf(oc->filename, sizeof(oc->filename),c->basename,pkt->pts/90,c->sequence);
+            snprintf(oc->filename, sizeof(oc->filename),c->basename,c->ms_base + pkt->pts/90,c->sequence);
             //av_log(s, AV_LOG_ERROR, "oc->filename=%s\n",oc->filename);
        }
        //else if (av_get_frame_filename(oc->filename, sizeof(oc->filename),
@@ -518,7 +519,7 @@ static int hls_start(AVFormatContext *s,AVPacket *pkt)
        //     return AVERROR(EINVAL);
        // }
         if( c->vtt_basename) {
-            snprintf(vtt_oc->filename, sizeof(vtt_oc->filename),c->vtt_basename,pkt->pts/90,c->sequence);
+            snprintf(vtt_oc->filename, sizeof(vtt_oc->filename),c->vtt_basename,c->ms_base + pkt->pts/90,c->sequence);
 //            if (av_get_frame_filename(vtt_oc->filename, sizeof(vtt_oc->filename),
 //                              c->vtt_basename, pkt->dts) < 0) {
 //                av_log(vtt_oc, AV_LOG_ERROR, "Invalid segment filename template '%s'\n", c->vtt_basename);
@@ -887,7 +888,7 @@ static const AVOption options[] = {
     {"omit_endlist", "Do not append an endlist when ending stream", 0, AV_OPT_TYPE_CONST, {.i64 = HLS_OMIT_ENDLIST }, 0, UINT_MAX,   E, "flags"},
     { "use_localtime", "set filename expansion with strftime at segment creation", OFFSET(use_localtime), AV_OPT_TYPE_BOOL, {.i64 = 0 }, 0, 1, E },
     {"method", "set the HTTP method", OFFSET(method), AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,    E},
-
+    {"hls_begin", "set hls segment begin",  OFFSET( ms_base),    AV_OPT_TYPE_INT,    {.i64 = 0},     0, INT_MAX, E},
     { NULL },
 };
 

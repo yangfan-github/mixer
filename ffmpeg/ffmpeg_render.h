@@ -28,6 +28,7 @@ class ffmpeg_render : public media_render
         StreamSet _streams;
         AVFormatContext* _ctxFormat;
         stream* _master;
+        property_tree::ptree _options;
         string _url;
         bool _is_global_header;
         bool _is_image;
@@ -43,7 +44,7 @@ class ffmpeg_render : public media_render
     protected:
         ret_type set_media_type(input_pin* pin,media_ptr mt);
         input_pin_ptr create_pin(media_ptr mt);
-        ret_type open(const string& url);
+        ret_type open(const string& url,const property_tree::ptree& pt);
         bool is_eof();
         bool is_open();
         void close();

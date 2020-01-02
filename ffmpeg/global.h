@@ -52,5 +52,6 @@ ret_type convert_avframe_to_frame(media_ptr mt,frame_ptr dest,AVFrame* sour,AVCo
 ret_type convert_frame_to_avframe(media_ptr mt,AVFrame* dest,frame_ptr sour,AVCodecContext* ctxCodec);
 void get_audio_sample_rate(const int* supported_samplerates,int& sample_rate);
 void get_option(AVCodecContext* ctx,property_tree::ptree& pt);
+void get_option(AVFormatContext* ctx,property_tree::ptree& pt);
 
 #endif // GLOBAL_H_INCLUDED
