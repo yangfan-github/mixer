@@ -24,6 +24,7 @@ mixer-build:
   only:
     - develop
   before_script:
+    - workdir=$(pwd)
     - isSDKChanged=$(git diff --name-only HEAD~ HEAD ./third-party/ffSDK | wc -l)
     - if [ $isSDKChanged -gt 0 ];then
     - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
@@ -36,7 +37,6 @@ mixer-build:
     - make
     - fi
   script:
-    - workdir=$(pwd)
     # - sed -i "s|deb.debian.org|mirrors.aliyun.com|g" /etc/apt/sources.list
     # - sed -i 's|security.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list
     # - apt update
@@ -45,9 +45,9 @@ mixer-build:
     # - cd ./third-party/ffSDK/src
     # - ./configure --enable-shared
     # - make
+    - ffmpeg=${BUILDDIR}/ffmpeg
     - if [ -d "${ffmpeg}/target" ];then mkdir -p ${ffmpeg}/target;fi
     - rm -rf ${ffmpeg}/target/*
-    - ffmpeg=${BUILDDIR}/ffmpeg
     - mkdir -p ${ffmpeg}/target/plugins bin/plugins
     - ulimit -c unlimited
     - cd ${workdir}
