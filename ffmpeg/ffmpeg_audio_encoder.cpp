@@ -140,11 +140,11 @@ ret_type ffmpeg_audio_encoder::open(media_type* mt)
     _ctxCodec->flags |= CODEC_FLAG_GLOBAL_HEADER;
     _ctxCodec->flags2 &= ~AV_CODEC_FLAG2_LOCAL_HEADER;
 
+    _ctxCodec->thread_count = 0;
     get_option(_ctxCodec,mt->get_codec_option());
 
     int ret;
     char err[AV_ERROR_MAX_STRING_SIZE] = {0};
-    _ctxCodec->thread_count = 0;
     JCHKM(0 == (ret = avcodec_open2(_ctxCodec,codec,NULL)),rc_fail,
             FORMAT_STR("avcodec_open2 fail,sub=%1%,message=%2%",
             %mt->get_sub_name()%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,ret)))
