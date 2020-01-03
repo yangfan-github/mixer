@@ -75,7 +75,7 @@ ret_type engine_tracker::load(property_tree::ptree& pt)
         track_source_ptr ts(new tracker_source(nullptr,_it_segment,0));
         JCHK(ts,rc_new_fail)
 
-        JIF(ts->set_source(source,_mt,0,0))
+        JIF(ts->set_source(source,_mt,0))
         JIF(ts->pop(nullptr,_background))
     }
     return rt;

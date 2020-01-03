@@ -27,13 +27,15 @@
         "pos_x": 0,
         "pos_y": 72,
         "pos_cx": 1024,
-        "pos_cy": 576
+        "pos_cy": 576,
+	  "background":"./template/main.jpg"
       },
       "teacher": {
         "pos_x": 1024,
         "pos_y": 0,
         "pos_cx": 256,
-        "pos_cy": 192
+        "pos_cy": 192,
+	  "background":"./template/teacher.jpg"
       }
     }
   },

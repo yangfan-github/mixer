@@ -236,9 +236,12 @@ ret_type engine_source::append(property_tree::ptree& segment)
         path = path.substr(slash+1);
         MixerIt it_mixer = _mixers.find(key);
         JCHKM(it_mixer != _mixers.end(),rc_param_invalid,FORMAT_STR("can not find segment mixer,name=%1%",%key))
-        TrackerType tracker = it_mixer->second->find_tracker(path);
-        JCHKM(tracker,rc_param_invalid,FORMAT_STR("can not find segment tracker,mixer=%1%,tracker=%2%",%key%path))
-        JIF(tracker->add_segment(segment))
+        if(it_mixer->second->is_connect())
+        {
+            TrackerType tracker = it_mixer->second->find_tracker(path);
+            JCHKM(tracker,rc_param_invalid,FORMAT_STR("can not find segment tracker,mixer=%1%,tracker=%2%",%key%path))
+            JIF(tracker->add_segment(segment))
+        }
     }
     return rt;
 }
@@ -294,9 +297,12 @@ ret_type engine_source::add_segment(SegmentIt it)
         path = path.substr(slash+1);
         MixerIt it_mixer = _mixers.find(key);
         JCHK(it_mixer != _mixers.end(),rc_param_invalid)
-        TrackerType tracker = it_mixer->second->find_tracker(path);
-        JCHK(tracker,rc_param_invalid)
-        JIF(tracker->add_source(source,it->first,time_base))
+        if(it_mixer->second->is_connect())
+        {
+            TrackerType tracker = it_mixer->second->find_tracker(path);
+            JCHK(tracker,rc_param_invalid)
+            JIF(tracker->add_source(source,it->first,time_base))
+        }
     }
     return rt;
 }
