@@ -888,7 +888,7 @@ static const AVOption options[] = {
     {"omit_endlist", "Do not append an endlist when ending stream", 0, AV_OPT_TYPE_CONST, {.i64 = HLS_OMIT_ENDLIST }, 0, UINT_MAX,   E, "flags"},
     { "use_localtime", "set filename expansion with strftime at segment creation", OFFSET(use_localtime), AV_OPT_TYPE_BOOL, {.i64 = 0 }, 0, 1, E },
     {"method", "set the HTTP method", OFFSET(method), AV_OPT_TYPE_STRING, {.str = NULL},  0, 0,    E},
-    {"hls_begin", "set hls segment begin",  OFFSET( ms_base),    AV_OPT_TYPE_INT,    {.i64 = 0},     0, INT_MAX, E},
+    {"hls_begin", "set hls segment begin",  OFFSET( ms_base),    AV_OPT_TYPE_INT,    {.i64 = 0},     0, INT64_MAX, E},
     { NULL },
 };
 

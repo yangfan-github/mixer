@@ -223,7 +223,10 @@ void get_option(void* ctx,const string& key,property_tree::ptree& pt)
     {
         optional<int64_t> int_value = pt.get_value_optional<int64_t>();
         if(int_value)
-            rl = av_opt_set_int(ctx,key.c_str(),int_value.value(),0);
+        {
+            int64_t time = int_value.value();
+            rl = av_opt_set_int(ctx,key.c_str(),time,0);
+        }
     }
     if(0 != rl)
     {

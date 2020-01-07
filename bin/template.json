@@ -10,7 +10,7 @@
       "720p":{
         "sub":"h264",
         "codec":{
-          "threads":4,
+          "threads":0,
           "b":2000000,
           "g":25,
           "bf":0,
@@ -49,7 +49,7 @@
         "64k":{
           "sub":"aac",
           "codec":{
-            "threads":4,
+            "threads":0,
             "b":64000
           }
         }
