@@ -68,6 +68,11 @@ ret_type mixer_engine::run(const char* task_file)
         JCHK(false == pt_outputs.value().empty(),rc_param_invalid)
         JCHK(false == pt_segments.value().empty(),rc_param_invalid)
 
+        BOOST_FOREACH(property_tree::ptree::value_type &pt_segment, pt_segments.value())
+        {
+            JIF(_source->append(pt_segment.second))
+        }
+
         BOOST_FOREACH(property_tree::ptree::value_type &pt_output, pt_outputs.value())
         {
             optional<string> url = pt_output.second.get_optional<string>("url");
@@ -85,17 +90,16 @@ ret_type mixer_engine::run(const char* task_file)
                 input_pin_ptr pin;
                 string path = pt_stream.second.get_value<string>();
                 JCHKM(mixer = _source->find(path),rc_param_invalid,FORMAT_STR("can not find mixer output,path=%1%",%path))
-                JCHK(mt = mixer->find_output(path),rc_param_invalid)
-                JCHK(pin = render->create_pin(mt),rc_param_invalid);
-                JIF(connect(std::dynamic_pointer_cast<output_pin>(mixer),pin));
+                if(mixer->_have_segments)
+                {
+                    JCHK(mt = mixer->find_output(path),rc_param_invalid)
+                    JCHK(pin = render->create_pin(mt),rc_param_invalid);
+                    JIF(connect(std::dynamic_pointer_cast<output_pin>(mixer),pin));
+                }
             }
             optional<property_tree::ptree&> pt_options = pt_output.second.get_child_optional("options");
             JIF(render->open(url.value(),pt_options ? pt_options.value() : property_tree::ptree()))
             _renders.insert(_renders.end(),render);
-        }
-        BOOST_FOREACH(property_tree::ptree::value_type &pt_segment, pt_segments.value())
-        {
-            JIF(_source->append(pt_segment.second))
         }
     }
     catch (boost::property_tree::json_parser::json_parser_error& e)

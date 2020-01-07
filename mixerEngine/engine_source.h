@@ -29,6 +29,7 @@ class tracker_mixer : public output_pin
         uint8_t *_data_dest[8];
         int _linesize_dest[8];
     public:
+        bool _have_segments;
         media_ptr _mt_output;
     public:
         tracker_mixer(engine_source* source);

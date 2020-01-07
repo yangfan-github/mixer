@@ -5,6 +5,7 @@ tracker_mixer::tracker_mixer(engine_source* source)
 ,_it_tracker(_trackers.end())
 ,_count_eof(0)
 ,_eof(false)
+,_have_segments(false)
 {
     g_dump.set_class("tracker_mixer");
 }
@@ -95,7 +96,7 @@ int64_t tracker_mixer::get_time_base()
     for(TrackerIt it = _trackers.begin() ; it != _trackers.end() ; ++it)
     {
         int64_t time = it->second->get_time_base();
-        if(time < time_base || time_base == MEDIA_FRAME_NONE_TIMESTAMP)
+        if(time != MEDIA_FRAME_NONE_TIMESTAMP && (time < time_base || time_base == MEDIA_FRAME_NONE_TIMESTAMP))
             time_base = time;
     }
     _eof = false;
@@ -146,7 +147,10 @@ ret_type tracker_mixer::process(media_task* task)
         _eof = true;
 
     if(_eof)
+    {
+        _have_segments = false;
         return media_task::rc_eof;
+    }
     else
         return rc_ok;
 }
@@ -217,7 +221,7 @@ void engine_source::get_time_base()
     for(MixerIt it = _mixers.begin() ; it != _mixers.end() ; ++it)
     {
         int64_t time = it->second->get_time_base();
-        if(time < _time_base || MEDIA_FRAME_NONE_TIMESTAMP == _time_base)
+        if(time != MEDIA_FRAME_NONE_TIMESTAMP &&(time < _time_base || MEDIA_FRAME_NONE_TIMESTAMP == _time_base))
             _time_base = time;
     }
 }
@@ -236,12 +240,12 @@ ret_type engine_source::append(property_tree::ptree& segment)
         path = path.substr(slash+1);
         MixerIt it_mixer = _mixers.find(key);
         JCHKM(it_mixer != _mixers.end(),rc_param_invalid,FORMAT_STR("can not find segment mixer,name=%1%",%key))
-        if(it_mixer->second->is_connect())
-        {
-            TrackerType tracker = it_mixer->second->find_tracker(path);
-            JCHKM(tracker,rc_param_invalid,FORMAT_STR("can not find segment tracker,mixer=%1%,tracker=%2%",%key%path))
-            JIF(tracker->add_segment(segment))
-        }
+
+        TrackerType tracker = it_mixer->second->find_tracker(path);
+        JCHKM(tracker,rc_param_invalid,FORMAT_STR("can not find segment tracker,mixer=%1%,tracker=%2%",%key%path))
+        JIF(tracker->add_segment(segment))
+        if(false == it_mixer->second->_have_segments)
+            it_mixer->second->_have_segments = true;
     }
     return rt;
 }
