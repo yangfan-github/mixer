@@ -7,6 +7,7 @@
 
 class mixer_engine : public media_task
 {
+        friend class engine_source;
     protected:
         typedef list<render_ptr> RenderSet;
         typedef RenderSet::iterator RenderIt;
@@ -16,6 +17,9 @@ class mixer_engine : public media_task
         RenderSet _renders;
         std::timed_mutex _mt_wait;
         bool _eof;
+        int64_t _time_beg;
+        int64_t _time_end;
+        int32_t _percent;
     public:
         mixer_engine();
         virtual ~mixer_engine();

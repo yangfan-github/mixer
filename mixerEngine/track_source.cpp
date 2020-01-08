@@ -82,7 +82,7 @@ ret_type tracker_source::process()
     }
 }
 
-ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start,int64_t stop)
+ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start,int64_t& length,int64_t stop)
 {
     JCHK(source,rc_param_invalid)
     JCHK(mt,rc_param_invalid)
@@ -100,6 +100,8 @@ ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start
             if(mt_pin->get_major() == mt->get_major())
             {
                 pin_out = pin;
+                if(mt_pin->get_length() > length)
+                    length = mt_pin->get_length();
                 break;
             }
         }

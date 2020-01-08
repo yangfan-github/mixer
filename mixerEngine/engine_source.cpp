@@ -1,4 +1,6 @@
 #include "engine_source.h"
+#include "mixer_engine.h"
+
 tracker_mixer::tracker_mixer(engine_source* source)
 :output_pin(source)
 ,_source(source)
@@ -93,14 +95,32 @@ TrackerType tracker_mixer::find_tracker(const string& path)
 int64_t tracker_mixer::get_time_base()
 {
     int64_t time_base = MEDIA_FRAME_NONE_TIMESTAMP;
-    for(TrackerIt it = _trackers.begin() ; it != _trackers.end() ; ++it)
+    if(is_connect())
     {
-        int64_t time = it->second->get_time_base();
-        if(time != MEDIA_FRAME_NONE_TIMESTAMP && (time < time_base || time_base == MEDIA_FRAME_NONE_TIMESTAMP))
-            time_base = time;
+        for(TrackerIt it = _trackers.begin() ; it != _trackers.end() ; ++it)
+        {
+            int64_t time = it->second->get_time_base();
+            if(time != MEDIA_FRAME_NONE_TIMESTAMP && (time < time_base || time_base == MEDIA_FRAME_NONE_TIMESTAMP))
+                time_base = time;
+        }
+        _eof = false;
     }
-    _eof = false;
     return time_base;
+}
+
+int64_t tracker_mixer::get_time_end()
+{
+    int64_t time_end = MEDIA_FRAME_NONE_TIMESTAMP;
+    if(is_connect())
+    {
+        for(TrackerIt it = _trackers.begin() ; it != _trackers.end() ; ++it)
+        {
+            int64_t time = it->second->get_time_end();
+            if(time != MEDIA_FRAME_NONE_TIMESTAMP && (time > time_end || time_end == MEDIA_FRAME_NONE_TIMESTAMP))
+                time_end = time;
+        }
+    }
+    return time_end;
 }
 
 ret_type tracker_mixer::process(media_task* task)
@@ -215,7 +235,7 @@ std::shared_ptr<tracker_mixer> engine_source::find(string& path)
     return it->second;
 }
 
-void engine_source::get_time_base()
+int64_t engine_source::get_time_base()
 {
     _time_base = MEDIA_FRAME_NONE_TIMESTAMP;
     for(MixerIt it = _mixers.begin() ; it != _mixers.end() ; ++it)
@@ -224,6 +244,19 @@ void engine_source::get_time_base()
         if(time != MEDIA_FRAME_NONE_TIMESTAMP &&(time < _time_base || MEDIA_FRAME_NONE_TIMESTAMP == _time_base))
             _time_base = time;
     }
+    return _time_base;
+}
+
+int64_t engine_source::get_time_end()
+{
+    int64_t time_end = MEDIA_FRAME_NONE_TIMESTAMP;
+    for(MixerIt it = _mixers.begin() ; it != _mixers.end() ; ++it)
+    {
+        int64_t time = it->second->get_time_end();
+        if(time != MEDIA_FRAME_NONE_TIMESTAMP &&(time > time_end || MEDIA_FRAME_NONE_TIMESTAMP == time_end))
+            time_end = time;
+    }
+    return time_end;
 }
 
 ret_type engine_source::append(property_tree::ptree& segment)
@@ -292,6 +325,7 @@ ret_type engine_source::add_segment(SegmentIt it)
     int64_t time_base = (it->first - _time_base)*10000;
     source->set_base(time_base);
 
+    int64_t length = MEDIA_FRAME_NONE_TIMESTAMP;
     BOOST_FOREACH(property_tree::ptree::value_type &pt_tracker, pt_trackers.value())
     {
         string path = pt_tracker.second.get_value<string>();
@@ -305,8 +339,12 @@ ret_type engine_source::add_segment(SegmentIt it)
         {
             TrackerType tracker = it_mixer->second->find_tracker(path);
             JCHK(tracker,rc_param_invalid)
-            JIF(tracker->add_source(source,it->first,time_base))
+            JIF(tracker->add_source(source,it->first,time_base,length))
         }
+    }
+     if(it->first == _engine->_time_end && 0 < length)
+    {
+        _engine->_time_end += int64_t(length/10000.0);
     }
     return rt;
 }

@@ -36,7 +36,7 @@ class tracker_source : public media_filter , public media_task
         ret_type set_media_type(input_pin* pin,media_ptr mt);
         ret_type process(input_pin* pin,frame_ptr frame);
         ret_type process();
-        ret_type set_source(source_ptr source,media_ptr mt,int64_t start,int64_t stop = MEDIA_FRAME_NONE_TIMESTAMP);
+        ret_type set_source(source_ptr source,media_ptr mt,int64_t start,int64_t& length,int64_t stop = MEDIA_FRAME_NONE_TIMESTAMP);
         ret_type pop(media_task* task,frame_ptr& frame);
 };
 

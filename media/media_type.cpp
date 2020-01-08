@@ -44,6 +44,7 @@ media_type::media_type()
 ,_is_global_header(false)
 ,_extra_data(nullptr)
 ,_extra_size(0)
+,_length(MEDIA_FRAME_NONE_TIMESTAMP)
 {
 }
 
@@ -134,6 +135,16 @@ void media_type::set_duration(int64_t duration)
         set_video_duration(duration);
     else if(MMT_AUDIO == major)
         set_audio_duration(duration);
+}
+
+int64_t media_type::get_length()
+{
+    return _length;
+}
+
+void media_type::set_length(int64_t length)
+{
+    _length = length;
 }
 
 void media_type::set_video_format(VideoMediaType vmt)

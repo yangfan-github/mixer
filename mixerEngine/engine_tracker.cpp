@@ -74,8 +74,8 @@ ret_type engine_tracker::load(property_tree::ptree& pt)
 
         track_source_ptr ts(new tracker_source(nullptr,_it_segment,0));
         JCHK(ts,rc_new_fail)
-
-        JIF(ts->set_source(source,_mt,0))
+        int64_t length = MEDIA_FRAME_NONE_TIMESTAMP;
+        JIF(ts->set_source(source,_mt,0,length))
         JIF(ts->pop(nullptr,_background))
     }
     return rt;
@@ -91,7 +91,7 @@ ret_type engine_tracker::add_segment(property_tree::ptree& pt)
     return rc_ok;
 }
 
-ret_type engine_tracker::add_source(source_ptr source,int64_t time_base,int64_t start)
+ret_type engine_tracker::add_source(source_ptr source,int64_t time_base,int64_t start,int64_t& length)
 {
     SegmentIt it = _segments.find(time_base);
     JCHK(it != _segments.end(),rc_param_invalid)
@@ -115,7 +115,7 @@ ret_type engine_tracker::add_source(source_ptr source,int64_t time_base,int64_t 
             stop = next_it->first * 10000;
     }
     ret_type rt;
-    JIF(tsource->set_source(source,_mt,start,stop))
+    JIF(tsource->set_source(source,_mt,start,length,stop))
     it->second._source = tsource;
     return rt;
 }
@@ -151,6 +151,18 @@ int64_t engine_tracker::get_time_base()
     _eof = false;
     SegmentIt it = _segments.begin();
     return it == _segments.end() ? MEDIA_FRAME_NONE_TIMESTAMP : it->first;
+}
+
+int64_t engine_tracker::get_time_end()
+{
+    if(_segments.empty())
+        return MEDIA_FRAME_NONE_TIMESTAMP;
+    else
+    {
+        SegmentIt it = _segments.end();
+        --it;
+        return it->first;
+    }
 }
 
 ret_type engine_tracker::process(media_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize)

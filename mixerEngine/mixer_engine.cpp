@@ -3,6 +3,9 @@
 
 mixer_engine::mixer_engine()
 :_eof(true)
+,_time_beg(MEDIA_FRAME_NONE_TIMESTAMP)
+,_time_end(MEDIA_FRAME_NONE_TIMESTAMP)
+,_percent(0)
 {
     //ctor
     g_dump.set_class("mixer_engine");
@@ -118,9 +121,11 @@ ret_type mixer_engine::run(const char* task_file)
     {
         JCHKM(false,rc_param_invalid,FORMAT_STR("load task fail,file=%1%",%task_file))
     }
-    _source->get_time_base();
+    _time_beg = _source->get_time_base();
+    _time_end = _source->get_time_end();
     _time = MEDIA_FRAME_NONE_TIMESTAMP;
     _eof = false;
+    _percent = 0;
     JIF(g_pool.post(this))
     return rt;
 }
@@ -179,7 +184,16 @@ ret_type mixer_engine::process()
     else if(rt == rc_ok)
     {
         _time += _source->_duration;
-        //TRACE(dump::info,FORMAT_STR("time line:%1%ms",%(_time/10000)))
+        int64_t length = (_time_end - _time_beg) * 10000;
+        if(0 < length)
+        {
+            int32_t percent = int32_t(_time * 100.0/length);
+            if(percent != _percent)
+            {
+                _percent = percent;
+                TRACE(dump::info,FORMAT_STR("process:%1%%%",%_percent))
+            }
+        }
     }
     return rt;
 }

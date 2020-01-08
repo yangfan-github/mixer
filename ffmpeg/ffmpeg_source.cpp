@@ -6,7 +6,7 @@ ffmpeg_source::stream::stream(media_filter* filter)
 :output_pin(filter)
 ,_source(dynamic_cast<ffmpeg_source*>(filter))
 ,_stream(nullptr)
-,_length(0)
+,_length(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_start(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_duration(0)
 ,_is_global_header(false)
@@ -46,6 +46,11 @@ ret_type ffmpeg_source::stream::open(AVStream* stream)
             _length = int64_t(stream->duration * av_q2d(stream->time_base) * 10000000);
         }
         stream->codec->time_base = stream->time_base;
+    }
+    mt->set_length(_length);
+    if(0 > _length)
+    {
+        TRACE(dump::warn,"can not get source stream length");
     }
     mt->set_sub((MediaSubType)stream->codec->codec_id);
     mt->set_global_header(true == _source->_is_global_header && 0 < stream->codec->extradata_size);

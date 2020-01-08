@@ -26,8 +26,9 @@ class engine_tracker
         ret_type load(property_tree::ptree& pt);
         ret_type add_segment(property_tree::ptree& pt);
         int64_t get_time_base();
+        int64_t get_time_end();
         media_ptr get_media();
-        ret_type add_source(source_ptr source,int64_t time_base,int64_t start);
+        ret_type add_source(source_ptr source,int64_t time_base,int64_t start,int64_t& length);
         ret_type next_source(SegmentIt& it);
         ret_type process(media_task* task,frame_ptr frame,uint8_t** dst_data,int* dst_linesize);
         ret_type process(frame_ptr dest_frame,uint8_t** dst_data,int* dst_linesize,frame_ptr sour_frame);

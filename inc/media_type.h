@@ -34,6 +34,7 @@ class media_type : public std::enable_shared_from_this<media_type>
         uint8_t* _extra_data;
         int _extra_size;
         property_tree::ptree _codec_option;
+        int64_t _length;
         media_type();
         virtual ~media_type();
     public:
@@ -47,6 +48,8 @@ class media_type : public std::enable_shared_from_this<media_type>
         bool is_compress();
         int64_t get_duration();
         void set_duration(int64_t duration);
+        int64_t get_length();
+        void set_length(int64_t length);
         void set_video_format(VideoMediaType vmt);
         VideoMediaType get_video_format();
         void set_video_width(int width);
