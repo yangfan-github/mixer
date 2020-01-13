@@ -367,7 +367,7 @@ ret_type ffmpeg_source::process()
     {
         JCHK(_ctxFormat,rc_state_invalid)
 
-        if(_is_live)
+        if(nullptr != _ctxFormat->interrupt_callback.callback)
         {
             _begin_method = get_local_time();
             _name_method = "av_read_frame";
@@ -439,9 +439,14 @@ ret_type ffmpeg_source::open(const string& url)
             _ctxFormat->interrupt_callback.opaque = this;
             _is_live = true;
         }
+        else if(protocol == "http")
+        {
+            _ctxFormat->interrupt_callback.callback = timeout_callback;
+            _ctxFormat->interrupt_callback.opaque = this;
+        }
     }
 
-    if(_is_live)
+    if(nullptr != _ctxFormat->interrupt_callback.callback)
     {
         _begin_method = get_local_time();
         _name_method = "avformat_open_input";
@@ -455,7 +460,7 @@ ret_type ffmpeg_source::open(const string& url)
             %url%av_make_error_string(err,AV_ERROR_MAX_STRING_SIZE,hr)));
 
 
-    if(_is_live)
+    if(nullptr != _ctxFormat->interrupt_callback.callback)
     {
         _begin_method = get_local_time();
         _name_method = "avformat_find_stream_info";
