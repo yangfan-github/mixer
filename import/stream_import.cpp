@@ -11,7 +11,7 @@ stream_import::stream_import(const char* sour,const char* dest)
     bool except = true;
     if(_exit.compare_exchange_weak(except,false))
     {
-        g_pool.post(this);
+        run();
     }
 }
 
@@ -83,7 +83,7 @@ ret_type stream_import::process()
     {
         if(!_mt_wait.try_lock())
             _mt_wait.unlock();
-        return media_task::rc_eof;
+        stop();
     }
     if(IS_FAIL(run()))
     {

@@ -1,11 +1,36 @@
 #include "unistd.h"
 #include "../inc/media_thread_pool.h"
 #include <boost/thread.hpp>
+
+media_thread_pool g_pool;
+
 int64_t get_local_time();
 
 media_task::media_task()
 :_is_live(false)
-,_time(MEDIA_FRAME_NONE_TIMESTAMP){}
+,_time(MEDIA_FRAME_NONE_TIMESTAMP)
+,_run(0){}
+
+bool media_task::run()
+{
+    if(0 == _run++)
+    {
+        g_pool.post(this);
+        return true;
+    }
+    else
+        return false;
+}
+
+bool media_task::stop()
+{
+    return 0 == --_run;
+}
+
+bool media_task::is_run()
+{
+    return 0 < _run;
+}
 
 class meida_timer : public std::enable_shared_from_this<meida_timer>
 {
@@ -97,7 +122,7 @@ ret_type media_thread_pool::post(media_task* task)
 ret_type media_thread_pool::process(media_task* task)
 {
     ret_type rt = task->process();
-    if(IS_OK(rt))
+    if(task->is_run())
         post(task);
     return rt;
 }

@@ -126,7 +126,7 @@ ret_type mixer_engine::run(const char* task_file)
     _time = MEDIA_FRAME_NONE_TIMESTAMP;
     _eof = false;
     _percent = 0;
-    JIF(g_pool.post(this))
+    media_task::run();
     return rt;
 }
 
@@ -174,7 +174,7 @@ ret_type mixer_engine::process()
         {
             _renders.clear();
             _eof = true;
-            rt = media_task::rc_eof;
+            media_task::stop();
             if(!_mt_wait.try_lock())
                 _mt_wait.unlock();
         }

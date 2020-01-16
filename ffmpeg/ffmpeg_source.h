@@ -50,7 +50,7 @@ class ffmpeg_source : public media_source
         int64_t _time_delta;
         int64_t _begin_method;
         string _name_method;
-        std::mutex _mt_process;
+        //std::mutex _mt_process;
         bool _is_live;
         bool _is_open;
     public:

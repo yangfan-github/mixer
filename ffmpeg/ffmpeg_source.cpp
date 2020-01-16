@@ -362,7 +362,7 @@ ret_type ffmpeg_source::deliver(output_pin* pin,frame_ptr frame)
 
 ret_type ffmpeg_source::process()
 {
-    std::unique_lock<std::mutex> lck(_mt_process);
+    //std::unique_lock<std::mutex> lck(_mt_process);
     if(false == _eof)
     {
         JCHK(_ctxFormat,rc_state_invalid)

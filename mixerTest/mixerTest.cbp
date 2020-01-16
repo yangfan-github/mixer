@@ -12,7 +12,7 @@
 				<Option object_output="../obj/Debug/mixerTest/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="/mnt/hgfs/share/template.json /mnt/hgfs/share/tasks.json" />
+				<Option parameters="template.json task.json" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>

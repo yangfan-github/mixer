@@ -10,7 +10,6 @@
 
 struct media_task
 {
-
 ERROR_CODE_BEG(200)
     rc_again = rc_base,
     rc_eof,
@@ -19,6 +18,11 @@ ERROR_CODE_END
     int64_t _time;
     virtual ret_type process() = 0;
     media_task();
+    bool run();
+    bool stop();
+    bool is_run();
+protected:
+    std::atomic<int> _run;
 };
 
 class media_thread_pool

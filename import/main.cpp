@@ -26,5 +26,3 @@ int import_stop(void* handle)
     delete si;
     return 1;
 }
-
-media_thread_pool g_pool;

@@ -318,10 +318,12 @@ ret_type engine_source::add_segment(SegmentIt it)
     optional<property_tree::ptree&> pt_trackers = it->second._pt.get_child_optional("trackers");
     JCHK(pt_trackers,rc_param_invalid)
 
-    source_ptr source = create_filter<media_source>(url.value().c_str());
-    JCHK(source,rc_param_invalid)
+    meta_source::ptr meta(new meta_source());
+    JCHK(meta,rc_new_fail)
+    JIF(meta->open(url.value()));
+    source_ptr source = meta->get_source();
+    JCHK(source,rc_fail)
 
-    JIFM(source->open(url.value()),FORMAT_STR("segment source open fail,will be ignore,url=%1%",%url.value()))
     int64_t time_base = (it->first - _time_base)*10000;
     source->set_base(time_base);
 
@@ -339,7 +341,7 @@ ret_type engine_source::add_segment(SegmentIt it)
         {
             TrackerType tracker = it_mixer->second->find_tracker(path);
             JCHK(tracker,rc_param_invalid)
-            JIF(tracker->add_source(source,it->first,time_base,length))
+            JIF(tracker->add_meta(meta,it->first,time_base,length))
         }
     }
      if(it->first == _engine->_time_end && 0 < length)

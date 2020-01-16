@@ -1,12 +1,41 @@
 #include "track_source.h"
 #include "engine_source.h"
 
+meta_source::meta_source()
+{
+}
+
+meta_source::~meta_source()
+{
+}
+
+ret_type meta_source::process()
+{
+    JCHK(_source,rc_state_invalid)
+    return _source->process();
+}
+
+ret_type meta_source::open(const string& url)
+{
+    ret_type rt;
+    _source = create_filter<media_source>(url.c_str());
+    JCHK(_source,rc_param_invalid)
+    JIFM(_source->open(url),FORMAT_STR("segment source open fail,will be ignore,url=%1%",%url))
+    return rt;
+}
+
+source_ptr meta_source::get_source()
+{
+    return _source;
+}
+
 tracker_source::tracker_source(engine_tracker* tracker,SegmentIt it,int64_t time_buf)
 :_tracker(tracker)
 ,_it(it)
 ,_time_buf(time_buf)
 ,_pin(new input_pin(this))
 ,_task(nullptr)
+,_time(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_time_line(MEDIA_FRAME_NONE_TIMESTAMP)
 ,_is_buf(false)
 ,_start(MEDIA_FRAME_NONE_TIMESTAMP)
@@ -40,52 +69,39 @@ ret_type tracker_source::process(input_pin* pin,frame_ptr frame)
             _time = frame->_info.dts - _time_buf;
     }
 
+    JIF(_buf.push(frame))
+
+    if(_buf.is_eof() || _time > _time_line)
+    {
+        bool except = true;
+        if(_is_buf.compare_exchange_weak(except,false))
+            _source->stop();
+    }
+
+    if(nullptr != _task)
+    {
+        if(_buf.is_eof() || frame->_info.dts >= _task->_time)
+        {
+            _task->run();
+            _task = nullptr;
+        }
+    }
+
     if(!frame)
     {
         if(nullptr != _tracker)
             _tracker->next_source(_it);
     }
 
-    JIF(_buf.push(frame))
-
-    if(nullptr != _task)
-    {
-        if(!frame || frame->_info.dts >= _task->_time)
-        {
-            g_pool.post(_task);
-            _task = nullptr;
-        }
-    }
     return rt;
 }
 
-ret_type tracker_source::process()
+ret_type tracker_source::set_meta(meta_source::ptr meta,media_ptr mt,int64_t start,int64_t& length,int64_t stop)
 {
-    JCHK(_source,rc_state_invalid)
-
-    _source->process();
-
-    if(_buf.is_eof())
-    {
-        return media_task::rc_eof;
-    }
-    else
-    {
-        if(_time > _time_line)
-        {
-            bool except = true;
-            _is_buf.compare_exchange_weak(except,false);
-            return media_task::rc_again;
-        }
-        else
-            return rc_ok;
-    }
-}
-
-ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start,int64_t& length,int64_t stop)
-{
-    JCHK(source,rc_param_invalid)
+    JCHK(meta,rc_param_invalid)
     JCHK(mt,rc_param_invalid)
+    source_ptr source = meta->get_source();
+    JCHK(source,rc_param_invalid)
 
     ret_type rt;
     output_pin_ptr pin_out;
@@ -112,7 +128,7 @@ ret_type tracker_source::set_source(source_ptr source,media_ptr mt,int64_t start
     JIF(connect(pin_out,_pin,media_ptr(),mt))
     _start = start;
     _stop = stop;
-    _source = source;
+    _source = meta;
     return rt;
 }
 
@@ -170,16 +186,11 @@ ret_type tracker_source::pop(media_task* task,frame_ptr& frame)
                 rt = media_task::rc_again;
             }
         }
-        if(false == _buf.is_eof())
+        if(false == _buf.is_eof() && _time <= _time_line)
         {
-            if(_time <= _time_line)
-            {
-                bool except = false;
-                if(_is_buf.compare_exchange_weak(except,true))
-                {
-                    g_pool.post(this);
-                }
-            }
+            bool except = false;
+            if(_is_buf.compare_exchange_weak(except,true))
+                _source->run();
         }
         return rt;
     }

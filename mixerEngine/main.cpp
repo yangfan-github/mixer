@@ -47,5 +47,3 @@ void  mixer_delete(void* handle)
     mixer_engine* engine = (mixer_engine*)handle;
     delete engine;
 }
-
-media_thread_pool g_pool;
